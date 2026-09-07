@@ -1,6 +1,6 @@
 ---
-name: Regular Issue Template
-about: Help speed up ticket creation
+name: Default Ticket Template
+about: Help speed up ticket creation.
 title: Ticket
 labels: ''
 assignees: ''
@@ -10,7 +10,7 @@ type: Feature
 
 ## Description
 
-[Delete this and insert your description]
+[Delete this and write a clear and concise description of the ticket]
 
 ## User stories
 
@@ -19,4 +19,4 @@ type: Feature
 ## Acceptance Criteria
 
 - [] (If applicable) Test coverage is over 60%
-- [] (If applicable) Pylint scores this over 6/10
+- [] (If applicable) Pylint score is over 6/10
