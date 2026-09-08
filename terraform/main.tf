@@ -119,7 +119,7 @@ resource "aws_lambda_permission" "allow_scheduler" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.extract_function.function_name
   principal     = "scheduler.amazonaws.com"
-  source_arn    = aws_scheduler_schedule.c25-gabi-schedule.arn
+  source_arn    = aws_scheduler_schedule.c25_gabi_schedule.arn
 }
 
 
