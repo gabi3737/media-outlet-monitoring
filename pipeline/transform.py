@@ -2,13 +2,17 @@
 The transform aspect of the pipeline
 """
 import logging
-import pandas as pd
 from datetime import datetime, timezone
+import pandas as pd
 
 
 def clean_publication_time(data: pd.DataFrame) -> pd.DataFrame:
     """Returns a dataframe with a cleaned publication time"""
     logging.info("Cleaning the published column")
+    data['published'] = data['published'].str.replace(
+        r"\s+\S+$", "", regex=True
+    )
+
     data['published'] = pd.to_datetime(
         data['published'], errors='coerce', utc=True)
 
@@ -22,15 +26,16 @@ def clean_publication_time(data: pd.DataFrame) -> pd.DataFrame:
 def clean_string_columns(data: pd.DataFrame) -> pd.DataFrame:
     """Returns a dataframe where string columns are all cleaned"""
     logging.info("Cleaning all string columns")
-    data['title'] = data['title'].str.strip()
-    data['content'] = data['content'].str.strip()
-    data['author'] = data['author'].str.strip().str.capitalize()
+    data['title'] = data['title'].astype(str).str.strip()
+    data['content'] = data['content'].astype(str).str.strip()
+    data['author'] = data['author'].astype(str).str.strip().str.title()
     data["tags"] = (
         data["tags"]
+        .astype(str)
         .str.strip()
         .str.lower()
         .str.split(r", | / ")
-        .apply(lambda x: list(set(x)))
+        .apply(lambda x: list(set(x)) if isinstance(x, list) else [])
     )
 
     return data
@@ -40,8 +45,8 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
 
-    data = pd.read_csv("pipeline/data/wired_ai_feed.csv")
-    # data = pd.read_csv("pipeline/data/venturebeat_ai_feed.csv")
+    # data = pd.read_csv("pipeline/data/wired_ai_feed.csv")
+    data = pd.read_csv("pipeline/data/venturebeat_ai_feed.csv")
 
     data = clean_publication_time(data)
     data = clean_string_columns(data)
