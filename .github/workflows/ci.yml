@@ -37,7 +37,7 @@ jobs:
             - name: Test dashboard
               run: |
                 pytest \
-                  --cov=dashboard/src \
+                  --cov=dashboard/ \
                   --cov-report=term-missing \
                   --cov-report=xml \
                   --cov-fail-under=50 \
@@ -47,7 +47,7 @@ jobs:
             - name: Test pipeline
               run: |
                 pytest \
-                  --cov=pipeline/src \
+                  --cov=pipeline/ \
                   --cov-report=term-missing \
                   --cov-report=xml \
                   --cov-fail-under=50 \
