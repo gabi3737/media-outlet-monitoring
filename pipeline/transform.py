@@ -42,6 +42,7 @@ def clean_string_columns(data: pd.DataFrame) -> pd.DataFrame:
 
 def clean_author_column(data: pd.DataFrame) -> pd.DataFrame:
     """Returns the dataframe with a cleaned author column"""
+    logging.info("Cleaning the author column")
     data['author'] = (
         data['author']
         .astype(str)
