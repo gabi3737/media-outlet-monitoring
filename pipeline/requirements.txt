@@ -6,3 +6,4 @@ pylint
 logging
 requests
 feedparser
+pytest-cov
