@@ -1,9 +1,33 @@
+"""Script to load scraped data into DynamoDB."""
+
+import logging
 import boto3
 
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+
 def load_data(data: dict) -> None:
+    """Load scraped data into DynamoDB."""
+
+    if not data:
+        logging.warning("No data to load into DynamoDB.")
+        return
+
     dynamodb = boto3.resource('dynamodb')
+    logging.info("Connecting to DynamoDB.")
     table = dynamodb.Table('c25-gabi-db')
+
+    if table is None:
+        logging.error("DynamoDB table not found.")
+        return
+
+    logging.info("Starting to load data into DynamoDB.")
+    logging.info(f"Length of data to load into DynamoDB: {len(data)}")
+    logging.debug(f"Data to load into DynamoDB: {data}")
 
     for item in data:
         table.put_item(
@@ -20,3 +44,6 @@ def load_data(data: dict) -> None:
                 'Sentiment': f"{item['sentiment']}"
             }
         )
+        logging.debug(f"Loaded item into DynamoDB: {item['id']}")
+
+    logging.info("Finished loading data into DynamoDB.")
