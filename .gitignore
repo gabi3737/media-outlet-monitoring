@@ -91,6 +91,7 @@ venv/
 
 *.tfvars
 .terraform
+*.tfstate
 
 .venv
 
@@ -101,3 +102,9 @@ interview/
 
 pipeline/data
 pipeline/data/*
+*.csv
+*.json
+*.xml
+*.rss
+
+interview/
