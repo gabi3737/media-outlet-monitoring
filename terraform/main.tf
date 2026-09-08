@@ -125,7 +125,7 @@ resource "aws_lambda_permission" "allow_scheduler" {
 
 # EventBridge Scheduler Configuration
 
-resource "aws_scheduler_schedule" "c25-gabi-schedule" {
+resource "aws_scheduler_schedule" "c25_gabi_schedule" {
     name = "c25-gabi-schedule"
     group_name = "default"
 
