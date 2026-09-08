@@ -23,7 +23,13 @@ def clean_string_columns(data: pd.DataFrame) -> pd.DataFrame:
     data['title'] = data['title'].str.strip()
     data['content'] = data['content'].str.strip()
     data['author'] = data['author'].str.strip().str.capitalize()
-    data["tags"] = data["tags"].str.strip().str.lower().str.split(', ')
+    data["tags"] = (
+        data["tags"]
+        .str.strip()
+        .str.lower()
+        .str.split(r", | / ")
+        .apply(lambda x: list(set(x)))
+    )
 
     return data
 
@@ -37,4 +43,6 @@ if __name__ == "__main__":
 
     data = clean_publication_time(data)
     data = clean_string_columns(data)
-    print(data['tags'])
+
+    with pd.option_context("display.max_colwidth", None):
+        print(data.head(1).to_string())
