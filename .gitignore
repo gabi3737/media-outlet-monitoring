@@ -98,6 +98,10 @@ venv/
 *.pem
 *.pemkey
 
+interview/
+
+pipeline/data
+pipeline/data/*
 *.csv
 *.json
 *.xml
