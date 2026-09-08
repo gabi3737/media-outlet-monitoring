@@ -63,7 +63,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "dynamodb:UpdateItem"
         ]
 
-        Resource = aws_dynamodb_table.c25-gabi-db.arn
+        Resource = aws_dynamodb_table.c25_gabi_db.arn
       }
     ]
   })
