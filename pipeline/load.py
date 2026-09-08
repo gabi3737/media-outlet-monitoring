@@ -11,12 +11,8 @@ logging.basicConfig(
 )
 
 
-def load_data(data: dict) -> None:
-    """Load scraped data into DynamoDB."""
-
-    if not data:
-        logging.warning("No data to load into DynamoDB.")
-        return
+def connect_to_db() -> boto3.resources.factory.dynamodb.Table:
+    """Connect to the DynamoDB table and return the table resource."""
 
     dynamodb = boto3.resource('dynamodb')
     logging.info("Connecting to DynamoDB.")
@@ -26,7 +22,23 @@ def load_data(data: dict) -> None:
         table.load()
     except dynamodb.meta.client.exceptions.ResourceNotFoundException:
         logging.error("DynamoDB table 'c25-gabi-db' not found.")
-        return
+        return None
+
+    return table
+
+
+def load_data(data: dict) -> None:
+    """Load scraped data into DynamoDB."""
+
+    table = connect_to_db()
+
+    if table is None:
+        logging.error("Failed to connect to DynamoDB.")
+        return None
+
+    if not data:
+        logging.warning("No data to load into DynamoDB.")
+        return None
 
     logging.info("Starting to load data into DynamoDB.")
     logging.info(f"Length of data to load into DynamoDB: {len(data)}")
@@ -38,12 +50,12 @@ def load_data(data: dict) -> None:
         table.put_item(
             Item={
                 'PrimaryKey': f"{uuid.uuid4()}",
-                'SortKey': f"{item['publication_time']}",
-                'Outlet': f"{item['outlet']}",
+                'SortKey': f"{item['published']}",
                 'Title': f"{item['title']}",
-                'Content': f"{item['content']}",
                 'Author': f"{item['author']}",
-                'Keywords': f"{item['keywords']}",
+                'Link': f"{item['link']}",
+                'Tags': f"{item['tags']}",
+                'Content': f"{item['content']}",
                 'Individuals': f"{item['individuals']}",
                 'Companies': f"{item['companies']}",
                 'Sentiment': f"{item['sentiment']}"
