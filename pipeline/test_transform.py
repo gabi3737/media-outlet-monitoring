@@ -2,7 +2,6 @@
 Test for the transform.py file
 """
 import pytest
-from datetime import datetime, timezone
 import pandas as pd
 
 from transform import clean_publication_time, clean_string_columns
@@ -10,6 +9,7 @@ from transform import clean_publication_time, clean_string_columns
 
 @pytest.fixture
 def valid_dataframe():
+    """Valid pandas dataframe for testing"""
     return pd.DataFrame({
         "published": [
             "Mon, 07 Sep 2026 10:30:00 +0000",
@@ -36,6 +36,7 @@ def valid_dataframe():
 
 @pytest.fixture
 def empty_dataframe():
+    """Pandas dataframe with null values for testing"""
     return pd.DataFrame({
         "published": [None],
         "title": [None],
@@ -47,6 +48,7 @@ def empty_dataframe():
 
 @pytest.fixture
 def invalid_dataframe():
+    """Invalid pandas dataframe values for testing"""
     return pd.DataFrame({
         "published": ["Hello"],
         "title": [123],
@@ -57,6 +59,7 @@ def invalid_dataframe():
 
 
 def test_clean_publication_time_valid(valid_dataframe):
+    """Tests the clean_publication_time function with valid data"""
     result = clean_publication_time(valid_dataframe)
 
     assert result["published"].iloc[0] == pd.Timestamp(
@@ -68,16 +71,19 @@ def test_clean_publication_time_valid(valid_dataframe):
 
 
 def test_clean_publication_time_empty(empty_dataframe):
+    """Tests the clean_publication_time function with null values"""
     result = clean_publication_time(empty_dataframe)
     assert pd.isna(result["published"].iloc[0])
 
 
 def test_clean_publication_time_invalid(invalid_dataframe):
+    """Tests the clean_publication_time function with invalid data"""
     result = clean_publication_time(invalid_dataframe)
     assert pd.isna(result["published"].iloc[0])
 
 
 def test_clean_string_columns_valid(valid_dataframe):
+    """Tests the clean_string_columns function with valid data"""
     result = clean_string_columns(valid_dataframe)
     assert result["title"].iloc[0] == "test TITLE onE"
     assert result["title"].iloc[1] == "TEST title tWo"
@@ -96,6 +102,7 @@ def test_clean_string_columns_valid(valid_dataframe):
 
 
 def test_clean_string_columns_empty(empty_dataframe):
+    """Tests the clean_string_columns function with null values"""
     result = clean_string_columns(empty_dataframe)
     assert pd.isna(result["title"].iloc[0])
     assert pd.isna(result["content"].iloc[0])
@@ -104,6 +111,7 @@ def test_clean_string_columns_empty(empty_dataframe):
 
 
 def test_clean_string_columns_invalid(invalid_dataframe):
+    """Tests the clean_string_columns function with invalid data"""
     result = clean_string_columns(invalid_dataframe)
     assert result["title"].iloc[0] == "123"
     assert result["content"].iloc[0] == "123"
