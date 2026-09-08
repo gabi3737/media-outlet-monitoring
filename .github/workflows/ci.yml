@@ -42,7 +42,7 @@ jobs:
                   --cov-report=xml \
                   --cov-fail-under=50 \
                   -v \
-                  dashboard/tests
+                  dashboard/
 
             - name: Test pipeline
               run: |
@@ -52,7 +52,7 @@ jobs:
                   --cov-report=xml \
                   --cov-fail-under=50 \
                   -v \
-                  pipeline/tests
+                  pipeline/
 
             - name: Lint dashboard
               run: |
