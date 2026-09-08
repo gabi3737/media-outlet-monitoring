@@ -11,7 +11,7 @@ logging.basicConfig(
 )
 
 
-def connect_to_db() -> boto3.resources.factory.dynamodb.Table:
+def connect_to_db():
     """Connect to the DynamoDB table and return the table resource."""
 
     dynamodb = boto3.resource('dynamodb')
@@ -58,3 +58,4 @@ def load_data(data: pd.DataFrame) -> None:
         logging.debug(f"Loaded item into DynamoDB: {item['title']}")
 
     logging.info("Finished loading data into DynamoDB.")
+    return None
