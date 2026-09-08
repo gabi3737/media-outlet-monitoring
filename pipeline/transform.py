@@ -52,7 +52,7 @@ def clean_author_column(data: pd.DataFrame) -> pd.DataFrame:
                 if '(' in author and ')' in author
                 else author.strip()
                 for author in authors
-            ] if isinstance(authors, list) else authors
+            ] if isinstance(authors, list) else None
         )
     )
 

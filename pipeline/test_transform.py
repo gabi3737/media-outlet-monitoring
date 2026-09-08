@@ -4,7 +4,11 @@ Test for the transform.py file
 import pytest
 import pandas as pd
 
-from transform import clean_publication_time, clean_string_columns
+from transform import (
+    clean_publication_time,
+    clean_string_columns,
+    clean_author_column
+)
 
 
 @pytest.fixture
@@ -117,3 +121,26 @@ def test_clean_string_columns_invalid(invalid_dataframe):
     assert result["content"].iloc[0] == "123"
     assert result["author"].iloc[0] == "123"
     assert result["tags"].iloc[0] == ['123']
+
+
+def test_clean_author_column_valid(valid_dataframe):
+    """Tests the clean_author_column with valid data"""
+    result = clean_string_columns(valid_dataframe)
+    result = clean_author_column(result)
+    assert result["author"].iloc[0] == [
+        "Lily Hay Newman", "Matt Burgess", "Dhruv Mehrotra"]
+    assert result["author"].iloc[1] == ["Matt Marshall"]
+
+
+def test_clean_author_column_empty(empty_dataframe):
+    """Tests the clean_author_column with valid data"""
+    result = clean_string_columns(empty_dataframe)
+    result = clean_author_column(result)
+    assert result["author"].iloc[0] is None
+
+
+def test_clean_author_column_invalid(invalid_dataframe):
+    """Tests the clean_author_column with valid data"""
+    result = clean_string_columns(invalid_dataframe)
+    result = clean_author_column(result)
+    assert result["author"].iloc[0] == ["123"]
