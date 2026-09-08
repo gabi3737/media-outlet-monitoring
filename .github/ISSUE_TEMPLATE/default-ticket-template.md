@@ -18,5 +18,5 @@ type: Feature
 
 ## Acceptance Criteria
 
-- [] (If applicable) Test coverage is over 60%
-- [] (If applicable) Pylint score is over 6/10
+- [ ] (If applicable) Test coverage is over 60%
+- [ ] (If applicable) Pylint score is over 6/10
