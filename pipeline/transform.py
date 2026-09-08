@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 
 def clean_publication_time(data: pd.DataFrame) -> pd.DataFrame:
     """Returns a dataframe with a cleaned publication time"""
+    logging.info("Cleaning the published column")
     data['published'] = pd.to_datetime(
         data['published'], errors='coerce', utc=True)
 
@@ -20,6 +21,7 @@ def clean_publication_time(data: pd.DataFrame) -> pd.DataFrame:
 
 def clean_string_columns(data: pd.DataFrame) -> pd.DataFrame:
     """Returns a dataframe where string columns are all cleaned"""
+    logging.info("Cleaning all string columns")
     data['title'] = data['title'].str.strip()
     data['content'] = data['content'].str.strip()
     data['author'] = data['author'].str.strip().str.capitalize()
@@ -43,6 +45,8 @@ if __name__ == "__main__":
 
     data = clean_publication_time(data)
     data = clean_string_columns(data)
+
+    logging.info("Successfully cleaned the dataframe")
 
     with pd.option_context("display.max_colwidth", None):
         print(data.head(1).to_string())
