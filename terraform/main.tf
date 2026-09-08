@@ -133,7 +133,7 @@ resource "aws_scheduler_schedule" "c25-gabi-schedule" {
       mode = "OFF"
     }
 
-    schedule_expression = "0 */1 * * *"
+    schedule_expression = "cron(0 */1 * * ? *)"
 
     target {
         arn = aws_lambda_function.extract_function.arn
