@@ -1,0 +1,6 @@
+boto3
+python-dotenv
+pandas
+pytest
+pylint
+logging
