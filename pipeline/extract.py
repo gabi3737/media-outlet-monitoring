@@ -43,7 +43,7 @@ def feed_to_dataframe(feed):
             'tags': tags if tags else 'N/A',
             'content': content,
         })
-        logging.info(f"Processed entry: {entry.get('title', 'N/A')}")
+        logging.debug(f"Processed entry: {entry.get('title', 'N/A')}")
     return pd.DataFrame(data)
 
 
