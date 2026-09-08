@@ -1,6 +1,7 @@
 """Script to load scraped data into DynamoDB."""
 
 import logging
+import uuid
 import boto3
 
 
@@ -21,18 +22,22 @@ def load_data(data: dict) -> None:
     logging.info("Connecting to DynamoDB.")
     table = dynamodb.Table('c25-gabi-db')
 
-    if table is None:
-        logging.error("DynamoDB table not found.")
+    try:
+        table.load()
+    except dynamodb.meta.client.exceptions.ResourceNotFoundException:
+        logging.error("DynamoDB table 'c25-gabi-db' not found.")
         return
 
     logging.info("Starting to load data into DynamoDB.")
     logging.info(f"Length of data to load into DynamoDB: {len(data)}")
     logging.debug(f"Data to load into DynamoDB: {data}")
 
+    data = data.to_dict('records')
+
     for item in data:
         table.put_item(
             Item={
-                'PrimaryKey': f"{item['id']}",
+                'PrimaryKey': f"{uuid.uuid4()}",
                 'SortKey': f"{item['publication_time']}",
                 'Outlet': f"{item['outlet']}",
                 'Title': f"{item['title']}",
@@ -44,6 +49,6 @@ def load_data(data: dict) -> None:
                 'Sentiment': f"{item['sentiment']}"
             }
         )
-        logging.debug(f"Loaded item into DynamoDB: {item['id']}")
+        logging.debug(f"Loaded item into DynamoDB: {item['title']}")
 
     logging.info("Finished loading data into DynamoDB.")
