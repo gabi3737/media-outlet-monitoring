@@ -4,17 +4,28 @@ convert them into pandas DataFrames, and save them to CSV or JSON files.
 """
 import os
 import argparse
+import logging
 import feedparser
 import requests
 import pandas as pd
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
 
 def extract_feed(url):
     """Extract and parse an RSS feed from the given URL."""
+    logging.info(f"Extracting feed from: {url}")
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
     response = requests.get(url, headers=headers, timeout=10)
-    return feedparser.parse(response.content)
+    feed = feedparser.parse(response.content)
+    logging.info(
+        f"Successfully extracted feed with {len(feed.entries)} entries")
+    return feed
 
 
 def feed_to_dataframe(feed):
@@ -32,12 +43,13 @@ def feed_to_dataframe(feed):
             'tags': tags if tags else 'N/A',
             'content': content,
         })
+        logging.info(f"Processed entry: {entry.get('title', 'N/A')}")
     return pd.DataFrame(data)
 
 
 def fetch_and_save(url, filename, format='csv'):
     """Fetch an RSS feed from the given URL, convert it to a DataFrame, and save it to a file."""
-
+    logging.info(f"Processing feed: {url}")
     feed = extract_feed(url)
     df = feed_to_dataframe(feed)
     os.makedirs('data', exist_ok=True)
@@ -47,8 +59,7 @@ def fetch_and_save(url, filename, format='csv'):
     else:
         df.to_csv(f'data/{filename}', index=False)
 
-    print(df)
-    print(f"\nSaved {len(df)} entries to data/{filename}")
+    logging.info(f"Saved {len(df)} entries to data/{filename} ({format})")
 
 
 if __name__ == "__main__":
@@ -58,6 +69,8 @@ if __name__ == "__main__":
                         help='Output format (default: csv)')
     args = parser.parse_args()
 
+    logging.info(f"Starting feed extraction (format: {args.format})")
+
     # Determine file extension based on format
     ext = f'.{args.format}'
 
@@ -65,3 +78,5 @@ if __name__ == "__main__":
                    f"venturebeat_ai_feed{ext}", args.format)
     fetch_and_save("https://www.wired.com/feed/tag/ai/latest/rss",
                    f"wired_ai_feed{ext}", args.format)
+
+    logging.info("Feed extraction completed successfully")
