@@ -28,7 +28,6 @@ def clean_string_columns(data: pd.DataFrame) -> pd.DataFrame:
     logging.info("Cleaning all string columns")
     data['title'] = data['title'].astype(str).str.strip()
     data['content'] = data['content'].astype(str).str.strip()
-    data['author'] = data['author'].astype(str).str.strip().str.title()
     data["tags"] = (
         data["tags"]
         .astype(str)
@@ -45,12 +44,13 @@ def clean_author_column(data: pd.DataFrame) -> pd.DataFrame:
     """Returns the dataframe with a cleaned author column"""
     data['author'] = (
         data['author']
+        .astype(str)
         .str.split(', ')
         .apply(
             lambda authors: [
-                author.split('(')[1].split(')')[0].strip()
+                author.split('(')[1].split(')')[0].strip().title()
                 if '(' in author and ')' in author
-                else author.strip()
+                else author.strip().title()
                 for author in authors
             ] if isinstance(authors, list) else None
         )

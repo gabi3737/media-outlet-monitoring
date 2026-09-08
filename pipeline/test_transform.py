@@ -95,9 +95,6 @@ def test_clean_string_columns_valid(valid_dataframe):
     assert result["content"].iloc[0] == "test one"
     assert result["content"].iloc[1] == "test  two"
 
-    assert result["author"].iloc[0] == "Lily Hay Newman, Matt Burgess, Dhruv Mehrotra"
-    assert result["author"].iloc[1] == "Mmarshall@Venturebeat.Com (Matt Marshall)"
-
     assert set(result["tags"].iloc[0]) == {'gear',
                                            'gear news and events',
                                            'artificial intelligence',
@@ -110,7 +107,6 @@ def test_clean_string_columns_empty(empty_dataframe):
     result = clean_string_columns(empty_dataframe)
     assert pd.isna(result["title"].iloc[0])
     assert pd.isna(result["content"].iloc[0])
-    assert pd.isna(result["author"].iloc[0])
     assert result["tags"].iloc[0] == []
 
 
@@ -119,14 +115,12 @@ def test_clean_string_columns_invalid(invalid_dataframe):
     result = clean_string_columns(invalid_dataframe)
     assert result["title"].iloc[0] == "123"
     assert result["content"].iloc[0] == "123"
-    assert result["author"].iloc[0] == "123"
     assert result["tags"].iloc[0] == ['123']
 
 
 def test_clean_author_column_valid(valid_dataframe):
     """Tests the clean_author_column with valid data"""
-    result = clean_string_columns(valid_dataframe)
-    result = clean_author_column(result)
+    result = clean_author_column(valid_dataframe)
     assert result["author"].iloc[0] == [
         "Lily Hay Newman", "Matt Burgess", "Dhruv Mehrotra"]
     assert result["author"].iloc[1] == ["Matt Marshall"]
@@ -134,13 +128,11 @@ def test_clean_author_column_valid(valid_dataframe):
 
 def test_clean_author_column_empty(empty_dataframe):
     """Tests the clean_author_column with valid data"""
-    result = clean_string_columns(empty_dataframe)
-    result = clean_author_column(result)
+    result = clean_author_column(empty_dataframe)
     assert result["author"].iloc[0] is None
 
 
 def test_clean_author_column_invalid(invalid_dataframe):
     """Tests the clean_author_column with valid data"""
-    result = clean_string_columns(invalid_dataframe)
-    result = clean_author_column(result)
+    result = clean_author_column(invalid_dataframe)
     assert result["author"].iloc[0] == ["123"]
