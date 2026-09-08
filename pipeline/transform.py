@@ -41,17 +41,36 @@ def clean_string_columns(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
+def clean_author_column(data: pd.DataFrame) -> pd.DataFrame:
+    """Returns the dataframe with a cleaned author column"""
+    data['author'] = (
+        data['author']
+        .str.split(', ')
+        .apply(
+            lambda authors: [
+                author.split('(')[1].split(')')[0].strip()
+                if '(' in author and ')' in author
+                else author.strip()
+                for author in authors
+            ] if isinstance(authors, list) else authors
+        )
+    )
+
+    return data
+
+
 if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
 
-    # data = pd.read_csv("pipeline/data/wired_ai_feed.csv")
-    data = pd.read_csv("pipeline/data/venturebeat_ai_feed.csv")
+    data = pd.read_csv("pipeline/data/wired_ai_feed.csv")
+    # data = pd.read_csv("pipeline/data/venturebeat_ai_feed.csv")
 
     data = clean_publication_time(data)
     data = clean_string_columns(data)
+    data = clean_author_column(data)
 
     logging.info("Successfully cleaned the dataframe")
 
     with pd.option_context("display.max_colwidth", None):
-        print(data.head(1).to_string())
+        print(data['author'].to_string())
