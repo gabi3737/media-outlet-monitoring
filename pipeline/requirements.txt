@@ -4,3 +4,5 @@ pandas
 pytest
 pylint
 logging
+requests
+feedparser
