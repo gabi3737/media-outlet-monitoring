@@ -98,3 +98,6 @@ venv/
 *.pemkey
 
 interview/
+
+pipeline/data
+pipeline/data/*
