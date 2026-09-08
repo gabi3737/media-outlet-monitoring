@@ -3,7 +3,7 @@
 import logging
 import uuid
 import boto3
-
+import pandas as pd
 
 logging.basicConfig(
     level=logging.INFO,
@@ -18,16 +18,10 @@ def connect_to_db() -> boto3.resources.factory.dynamodb.Table:
     logging.info("Connecting to DynamoDB.")
     table = dynamodb.Table('c25-gabi-db')
 
-    try:
-        table.load()
-    except dynamodb.meta.client.exceptions.ResourceNotFoundException:
-        logging.error("DynamoDB table 'c25-gabi-db' not found.")
-        return None
-
     return table
 
 
-def load_data(data: dict) -> None:
+def load_data(data: pd.DataFrame) -> None:
     """Load scraped data into DynamoDB."""
 
     table = connect_to_db()
@@ -36,7 +30,7 @@ def load_data(data: dict) -> None:
         logging.error("Failed to connect to DynamoDB.")
         return None
 
-    if not data:
+    if data.empty:
         logging.warning("No data to load into DynamoDB.")
         return None
 
@@ -49,16 +43,16 @@ def load_data(data: dict) -> None:
     for item in data:
         table.put_item(
             Item={
-                'PrimaryKey': f"{uuid.uuid4()}",
-                'SortKey': f"{item['published']}",
-                'Title': f"{item['title']}",
-                'Author': f"{item['author']}",
-                'Link': f"{item['link']}",
-                'Tags': f"{item['tags']}",
-                'Content': f"{item['content']}",
-                'Individuals': f"{item['individuals']}",
-                'Companies': f"{item['companies']}",
-                'Sentiment': f"{item['sentiment']}"
+                'article_id': f"{uuid.uuid4()}",
+                'published': f"{item['published']}",
+                'title': f"{item['title']}",
+                'author': f"{item['author']}",
+                'link': f"{item['link']}",
+                'tags': f"{item['tags']}",
+                'content': f"{item['content']}",
+                'individuals': f"{item['individuals']}",
+                'companies': f"{item['companies']}",
+                'sentiment': f"{item['sentiment']}"
             }
         )
         logging.debug(f"Loaded item into DynamoDB: {item['title']}")
