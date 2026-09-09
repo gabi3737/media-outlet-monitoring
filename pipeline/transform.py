@@ -18,17 +18,16 @@ def load_spacy_model():
 
     model_name = "en_core_web_md"
 
-    try:
-        nlp = spacy.load(model_name)
-        logging.info(f"Successfully loaded spacy model: {model_name}")
-        return nlp
-    except OSError:
-        logging.warning(f"Spacy model not found. Downloading {model_name}...")
-        download(model_name)
-        nlp = spacy.load(model_name)
-        logging.info(
-            f"Successfully downloaded and loaded spacy model: {model_name}")
-        return nlp
+    nlp = spacy.load(model_name)
+    logging.info(f"Successfully loaded spacy model: {model_name}")
+    return nlp
+    # except OSError:
+    #     logging.warning(f"Spacy model not found. Downloading {model_name}...")
+    #     download(model_name)
+    #     nlp = spacy.load(model_name)
+    #     logging.info(
+    #         f"Successfully downloaded and loaded spacy model: {model_name}")
+    #     return nlp
 
 
 def extract_individuals(data: pd.DataFrame, nlp) -> pd.DataFrame:
