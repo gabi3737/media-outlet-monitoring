@@ -144,7 +144,7 @@ resource "aws_scheduler_schedule" "c25_gabi_schedule" {
 # Execution Role for API Gateway Lambda Function
 
 resource "aws_iam_role" "lambda_exec" {
-  name = "lambda-exec-role"
+  name = "c25-gabi-lambda-exec-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
