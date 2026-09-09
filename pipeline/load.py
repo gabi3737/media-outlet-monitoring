@@ -174,7 +174,7 @@ def run_full_pipeline(use_db=True, extract_only=False, save_local=False, local_f
     return data
 
 
-def lambda_handler(event, context):
+def lambda_handler(event=None, context=None):
     """AWS Lambda handler for the ETL pipeline.
 
     Event parameters:
