@@ -22,12 +22,12 @@ def decimal_default(obj):
 
 def handler(event, context):
     logger.info("Received event: %s", json.dumps(event))
-    route = event.get("routeKey", "")
+    route = event['routeKey']
     try:
 
-        if route == "GET /analysis":
-            return get_analysis(event)
-        elif route == "GET /items/{id}":
+        if route == "GET /keywords/{keyword}":
+            return get_keywords(event)
+        elif route == "GET /articles/{id}":
             return get_article(event)
         else:
             return {
@@ -41,12 +41,27 @@ def handler(event, context):
         }
 
 
-def get_analysis(event):
-    pass
+def get_keywords(event):
+    keyword = event['pathParameters']['keyword']
+    response = table.query(
+        IndexName="keyword-index",
+        KeyConditionExpression=boto3.dynamodb.conditions.Key(
+            "keyword").eq(keyword)
+    )
+    items = response.get("Items", [])
+    if not items:
+        return respond(404, {"error": "Keyword not found."})
+    return respond(200, {"items": items,
+                         'total': len(items)})
 
 
 def get_article(event):
-    pass
+    article_id = event['pathParameters']['id']
+    response = table.get_item(Key={"id": article_id})
+    item = response.get("Item")
+    if not item:
+        return respond(404, {"error": "Article not found."})
+    return respond(200, item)
 
 
 def respond(status_code, body):

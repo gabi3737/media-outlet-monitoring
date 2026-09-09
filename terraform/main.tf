@@ -185,17 +185,17 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
 data "archive_file" "lambda_zip" {
   type = "zip"
   source_dir = "lambda"
-  output_path = "lambda/handler.zip"
+  output_path = "zip/handler.zip"
 }
 
 # Lambda for API Gateway Configuration
 
-resource "aws_lambda_function" "get_analysis" {
+resource "aws_lambda_function" "api_handler" {
     function_name = "c25_gabi_gateway_function"
     runtime = "python3.11"
     handler = "handler.handler" #Handler function name in Python code
     filename = data.archive_file.lambda_zip.output_path 
-    source_code_hash = data.archive_file.lambda_zip.output_base64sha256  #Redploys code when we change it, as Terraform apply doesn't redeploy
+    source_code_hash = data.archive_file.lambda_zip.output_base64sha256  #Redeploys code when we change it, as Terraform apply doesn't redeploy
     role = aws_iam_role.lambda_exec.arn 
     timeout = 20
     environment {
@@ -213,18 +213,31 @@ resource "aws_apigatewayv2_api" "c25_gabi_api" {
     protocol_type = "HTTP"
 }
 
-resource "aws_apigatewayv2_integration" "get_analysis" {
+resource "aws_apigatewayv2_integration" "api_handler" {
     api_id = aws_apigatewayv2_api.c25_gabi_api.id
     integration_type = "AWS_PROXY"
-    integration_uri = aws_lambda_function.get_analysis.invoke_arn
+    integration_uri = aws_lambda_function.api_handler.invoke_arn
     integration_method = "POST" #This is how the API invokes the Lambdas, not how the user interacts with the API. (Very odd)
     payload_format_version = "2.0"
 }
 
-resource "aws_apigatewayv2_route" "get_analysis" {
+# API Routes
+resource "aws_apigatewayv2_route" "default" {
   api_id    = aws_apigatewayv2_api.c25_gabi_api.id
   route_key = "$default"
-  target    = "integrations/${aws_apigatewayv2_integration.get_analysis.id}"
+  target    = "integrations/${aws_apigatewayv2_integration.api_handler.id}"
+}
+
+resource "aws_apigatewayv2_route" "get_article" {
+  api_id    = aws_apigatewayv2_api.c25_gabi_api.id
+  route_key = "GET /articles/{id}"
+  target    = "integrations/${aws_apigatewayv2_integration.api_handler.id}"
+}
+
+resource "aws_apigatewayv2_route" "get_keywords" {
+  api_id    = aws_apigatewayv2_api.c25_gabi_api.id
+  route_key = "GET /keywords/{keyword}"
+  target    = "integrations/${aws_apigatewayv2_integration.api_handler.id}"
 }
 
 resource "aws_apigatewayv2_stage" "default" {
@@ -236,7 +249,7 @@ resource "aws_apigatewayv2_stage" "default" {
 resource "aws_lambda_permission" "api_gateway" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.get_analysis.function_name
+  function_name = aws_lambda_function.api_handler.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.c25_gabi_api.execution_arn}/*/*"
 }
