@@ -28,7 +28,7 @@ def handler(event, context):
         if route == "GET /analysis":
             return get_analysis(event)
         elif route == "GET /items/{id}":
-            return get_item(event)
+            return get_article(event)
         else:
             return {
                 "statusCode": 404,
@@ -45,7 +45,7 @@ def get_analysis(event):
     pass
 
 
-def get_item(event):
+def get_article(event):
     pass
 
 
