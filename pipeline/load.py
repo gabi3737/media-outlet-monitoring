@@ -4,6 +4,7 @@ import logging
 import uuid
 import boto3
 import pandas as pd
+from decimal import Decimal
 from extract import extract_all_feeds
 from transform import transform_data
 
@@ -72,6 +73,16 @@ def load_data(data: pd.DataFrame) -> None:
     data_records = data.to_dict('records')
 
     for item in data_records:
+        # Convert sentiment to DynamoDB Number (Decimal). DynamoDB rejects NaN/Infinity.
+        sentiment_value = item.get('sentiment', 0.0)
+        try:
+            sentiment_float = float(sentiment_value)
+            if sentiment_float != sentiment_float or sentiment_float in (float('inf'), float('-inf')):
+                raise ValueError("sentiment must be a finite number")
+            sentiment_decimal = Decimal(f"{sentiment_float:.2f}")
+        except (ValueError, TypeError):
+            sentiment_decimal = Decimal('0.00')
+
         # Use existing columns or defaults for missing ones
         table.put_item(
             Item={
@@ -84,7 +95,7 @@ def load_data(data: pd.DataFrame) -> None:
                 'content': str(item.get('content', 'N/A')),
                 'individuals': str(item.get('individuals', 'N/A')),
                 'companies': str(item.get('companies', 'N/A')),
-                'sentiment': str(item.get('sentiment', 'N/A'))
+                'sentiment': sentiment_decimal
             }
         )
         logging.debug(
@@ -161,6 +172,50 @@ def run_full_pipeline(use_db=True, extract_only=False, save_local=False, local_f
     logging.info("="*60)
 
     return data
+
+
+def lambda_handler(event=None, context=None):
+    """AWS Lambda handler for the ETL pipeline.
+
+    Event parameters:
+        - use_db (bool): Load to DynamoDB (default: True)
+        - save_local (bool): Save to local file instead (default: False)
+        - format (str): Output format 'csv' or 'json' (default: 'csv')
+        - extract_only (bool): Only extract, skip transform/load (default: False)
+
+    Returns:
+        dict: Lambda response with statusCode and body
+    """
+    logging.info("Lambda handler invoked")
+
+    try:
+        # Parse event parameters
+        use_db = event.get('use_db', True)
+        save_local = event.get('save_local', False)
+        local_format = event.get('format', 'csv')
+        extract_only = event.get('extract_only', False)
+
+        logging.info(
+            f"Parameters: use_db={use_db}, save_local={save_local}, format={local_format}, extract_only={extract_only}")
+
+        # Run pipeline
+        data = run_full_pipeline(
+            use_db=use_db,
+            extract_only=extract_only,
+            save_local=save_local,
+            local_format=local_format
+        )
+
+        return {
+            'statusCode': 200,
+            'body': f"Successfully processed {len(data)} articles. Shape: {data.shape}"
+        }
+    except Exception as e:
+        logging.error(f"Pipeline failed: {str(e)}", exc_info=True)
+        return {
+            'statusCode': 500,
+            'body': f"Pipeline error: {str(e)}"
+        }
 
 
 if __name__ == "__main__":
