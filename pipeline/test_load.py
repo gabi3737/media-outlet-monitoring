@@ -11,6 +11,7 @@ from load import (
     connect_to_db,
     get_most_recent_date,
     load_data,
+    run_full_pipeline,
 )
 
 
@@ -141,3 +142,17 @@ def test_load_data_invalid_sentiment(mock_dynamodb_table):
     call_args = mock_dynamodb_table.put_item.call_args
     sentiment_value = call_args[1]["Item"]["sentiment"]
     assert sentiment_value == Decimal("0.00")
+
+
+@patch("load.extract_all_feeds")
+@patch("load.transform_data")
+def test_run_full_pipeline_no_db(mock_transform, mock_extract, sample_dataframe, caplog):
+    """Test pipeline with use_db=False."""
+    mock_extract.return_value = sample_dataframe
+    mock_transform.return_value = sample_dataframe
+
+    with caplog.at_level(logging.INFO):
+        result = run_full_pipeline(use_db=False)
+
+    assert "Skipping DynamoDB load" in caplog.text
+    assert len(result) == len(sample_dataframe)
