@@ -5,8 +5,8 @@ import logging
 from datetime import datetime, timezone
 import pandas as pd
 import spacy
-from spacytextblob.spacytextblob import SpacyTextBlob
 import spacy.cli
+from spacytextblob.spacytextblob import SpacyTextBlob
 
 
 def clean_publication_time(data: pd.DataFrame) -> pd.DataFrame:
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
     # Get sentiment of articles
     data['sentiment'] = data['content'].apply(
-        lambda x: get_sentiment_spacey(nlp, x))
+        lambda x: get_sentiment(nlp, x))
 
     logging.info("Successfully cleaned the dataframe")
 
