@@ -2,7 +2,12 @@
 
 from unittest.mock import MagicMock, patch
 
-from extract import extract_feed, feed_to_dataframe
+from extract import (
+    extract_feed,
+    feed_to_dataframe,
+    scrape_article_content,
+    clean_html_content,
+)
 
 
 @patch("extract.feedparser.parse")
@@ -101,3 +106,21 @@ def test_feed_to_dataframe_content_correct_format():
 
     assert df.loc[0, "content"] == "Content; with; commas and newlines"
     assert df.loc[1, "content"] == "Another content"
+
+
+@patch("extract.time.sleep")
+@patch("extract.Article")
+def test_scrape_article_content_returns_content(mock_article_cls, mock_sleep):
+    mock_article = MagicMock()
+    mock_article.text = "Some   article \n text"
+    mock_article_cls.return_value = mock_article
+
+    result = scrape_article_content("https://example.com/article")
+
+    assert result == "Some article text"
+
+
+def test_clean_html_content_returns_something():
+    result = clean_html_content("<p>Hello <b>world</b></p>")
+
+    assert result
