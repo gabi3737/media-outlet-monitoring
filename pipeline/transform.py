@@ -6,7 +6,6 @@ import logging
 from datetime import datetime, timezone
 import pandas as pd
 import spacy
-import spacy.cli
 from spacytextblob.spacytextblob import SpacyTextBlob
 
 
@@ -143,14 +142,14 @@ if __name__ == "__main__":
     # TODO: Make changes to connect to the extract.py later
     # Set up data:
     data = pd.read_csv(csv_path)
-   
+
     # Set up spacy model:
     nlp = load_spacy_model()
     nlp.add_pipe('spacytextblob')
-    
+
     data = extract_individuals(data, nlp)
     data = extract_companies(data, nlp)
-    
+
     # Clean data:
     data = clean_publication_time(data)
     data = clean_string_columns(data)
