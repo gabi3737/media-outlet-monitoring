@@ -6,7 +6,6 @@ import logging
 from datetime import datetime, timezone
 import pandas as pd
 import spacy
-import spacy.cli
 from spacytextblob.spacytextblob import SpacyTextBlob
 
 # Import extract module for standalone testing
