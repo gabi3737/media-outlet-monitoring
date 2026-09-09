@@ -42,17 +42,8 @@ def handler(event, context):
 
 
 def get_keywords(event):
-    keyword = event['pathParameters']['keyword']
-    response = table.query(
-        IndexName="keyword-index",
-        KeyConditionExpression=boto3.dynamodb.conditions.Key(
-            "keyword").eq(keyword)
-    )
-    items = response.get("Items", [])
-    if not items:
-        return respond(404, {"error": "Keyword not found."})
-    return respond(200, {"items": items,
-                         'total': len(items)})
+    # TODO: Implement after adding a DynamoDB GSI (e.g., "keyword-index") and writing the keyword attribute during ingestion.
+    return respond(501, {"error": "GET /keywords/{keyword} is not implemented yet."})
 
 
 def get_article(event):
