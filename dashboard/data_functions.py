@@ -1,0 +1,36 @@
+"""
+Functions that manipulate the dataframe for the visualisations
+"""
+import logging
+import pandas as pd
+
+
+def get_clean_data(data: pd.DataFrame) -> pd.DataFrame:
+    """Returns a cleaned dataframe"""
+    data['published'] = pd.to_datetime(data['published'], errors='coerce')
+    data['companies'] = (
+        data['companies'].str.replace('[', '')
+        .str.replace(']', '').str.split(', ')
+    )
+
+    data['tags'] = (
+        data['tags'].str.replace('[', '')
+        .str.replace(']', '').str.split(', ')
+    )
+
+    data['individuals'] = (
+        data['individuals'].str.replace('[', '')
+        .str.replace(']', '').str.split(', ')
+    )
+
+    data['author'] = (
+        data['author'].str.replace('[', '')
+        .str.replace(']', '').str.split(', ')
+    )
+
+    return data
+
+
+def get_company_mention_count(data: pd.DataFrame) -> int:
+    """Returns the count of companies mentioned"""
+    data['companies']

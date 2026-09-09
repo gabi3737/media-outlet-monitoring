@@ -7,8 +7,8 @@ import altair as alt
 import boto3
 import pandas as pd
 
-from data import (
-    get_average_sentiment,
+from data_functions import (
+    get_clean_data,
     get_company_mention_count
 )
 
@@ -33,8 +33,12 @@ def load_data() -> pd.DataFrame:
 
 
 if __name__ == "__main__":
+
+    # Set up data:
     data = load_data()
-    data['published'] = pd.to_datetime(data['published'], errors='coerce')
+    data = get_clean_data(data)
+
+    # Streamlit:
     st.markdown("# Otranto Development: AI Media Analysis")
 
     # Metrics
@@ -48,10 +52,13 @@ if __name__ == "__main__":
     with col2:
         st.metric(
             "Average Sentiment",
-            f"{get_average_sentiment(data)}"
+            f"{round(data['sentiment'].mean(), 2)}"
         )
     with col3:
         st.metric(
             "Company Mention Count",
             f"{get_company_mention_count(data)}"
         )
+
+    st.dataframe(data)
+    st.markdown(data.dtypes)
