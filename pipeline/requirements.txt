@@ -6,9 +6,11 @@ pylint
 logging
 requests
 feedparser
-newspaper3k
-lxml[html-clean]
 pytest-cov
 spacy
+newspaper3k
+lxml[html-clean]
 spacytextblob
 textblob
+beautifulsoup4
+

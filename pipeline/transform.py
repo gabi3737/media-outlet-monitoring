@@ -1,12 +1,74 @@
 """
 The transform aspect of the pipeline
 """
+import os
 import logging
 from datetime import datetime, timezone
 import pandas as pd
 import spacy
 import spacy.cli
 from spacytextblob.spacytextblob import SpacyTextBlob
+
+
+def load_spacy_model():
+    """Load a spacy model for named entity recognition."""
+    from spacy.cli import download
+
+    model_name = "en_core_web_md"
+
+    try:
+        nlp = spacy.load(model_name)
+        logging.info(f"Successfully loaded spacy model: {model_name}")
+        return nlp
+    except OSError:
+        logging.warning(f"Spacy model not found. Downloading {model_name}...")
+        download(model_name)
+        nlp = spacy.load(model_name)
+        logging.info(
+            f"Successfully downloaded and loaded spacy model: {model_name}")
+        return nlp
+
+
+def extract_individuals(data: pd.DataFrame, nlp) -> pd.DataFrame:
+    """Extract people entities from article content using spacy NER."""
+    logging.info("Extracting individuals from content")
+
+    individuals_list = []
+    for content in data['content']:
+        if isinstance(content, str) and content != 'N/A':
+            doc = nlp(content)
+            # Extract PERSON entities
+            people = list(
+                set([ent.text for ent in doc.ents if ent.label_ == "PERSON"]))
+            individuals_list.append(', '.join(people) if people else 'N/A')
+        else:
+            individuals_list.append('N/A')
+
+    data['individuals'] = individuals_list
+    logging.info(
+        f"Successfully extracted individuals for {len(data)} articles")
+    return data
+
+
+def extract_companies(data: pd.DataFrame, nlp) -> pd.DataFrame:
+    """Extract company entities from article content using spacy NER."""
+    logging.info("Extracting companies from content")
+
+    companies_list = []
+    for content in data['content']:
+        if isinstance(content, str) and content != 'N/A':
+            doc = nlp(content)
+            # Extract ORG entities
+            companies = list(
+                set([ent.text for ent in doc.ents if ent.label_ == "ORG"]))
+            companies_list.append(', '.join(companies) if companies else 'N/A')
+        else:
+            companies_list.append('N/A')
+
+    data['companies'] = companies_list
+    logging.info(
+        f"Successfully extracted companies for {len(data)} articles")
+    return data
 
 
 def clean_publication_time(data: pd.DataFrame) -> pd.DataFrame:
@@ -74,17 +136,21 @@ if __name__ == "__main__":
 
     # Set up:
     logging.basicConfig(level=logging.INFO)
-
-    # Set up for sentiment:
-    spacy.cli.download("en_core_web_sm")
-    nlp = spacy.load('en_core_web_sm')
-    nlp.add_pipe('spacytextblob')
+    # Get the directory of this script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    csv_path = os.path.join(script_dir, "data", "venturebeat_ai_feed.csv")
 
     # TODO: Make changes to connect to the extract.py later
     # Set up data:
-    data = pd.read_csv("pipeline/data/wired_ai_feed.csv")
-    # data = pd.read_csv("pipeline/data/venturebeat_ai_feed.csv")
-
+    data = pd.read_csv(csv_path)
+   
+    # Set up spacy model:
+    nlp = load_spacy_model()
+    nlp.add_pipe('spacytextblob')
+    
+    data = extract_individuals(data, nlp)
+    data = extract_companies(data, nlp)
+    
     # Clean data:
     data = clean_publication_time(data)
     data = clean_string_columns(data)
@@ -100,3 +166,5 @@ if __name__ == "__main__":
     # Check output:
     with pd.option_context("display.max_colwidth", None):
         print(data['sentiment'].to_string())
+        print(data["individuals"].value_counts())
+        print(data["companies"].value_counts())
