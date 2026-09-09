@@ -7,3 +7,4 @@ logging
 requests
 feedparser
 pytest-cov
+spacy
