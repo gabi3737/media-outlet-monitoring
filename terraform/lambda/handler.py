@@ -47,12 +47,16 @@ def get_keywords(event):
 
 
 def get_article(event):
-    article_id = event['pathParameters']['id']
-    response = table.get_item(Key={"id": article_id})
-    item = response.get("Item")
-    if not item:
+    article_id = event["pathParameters"]["id"]
+    response = table.query(
+        KeyConditionExpression=Key("article_id").eq(article_id),
+        ScanIndexForward=False,
+        Limit=1,
+    )
+    items = response.get("Items", [])
+    if not items:
         return respond(404, {"error": "Article not found."})
-    return respond(200, item)
+    return respond(200, items[0])
 
 
 def respond(status_code, body):
