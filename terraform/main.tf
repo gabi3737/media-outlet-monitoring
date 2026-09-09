@@ -77,7 +77,7 @@ resource "aws_lambda_function" "extract_function" {
     function_name = "c25_gabi_extract"
     role = aws_iam_role.extract_lambda_role.arn
     package_type = "Image"
-    image_uri = "" 
+    image_uri = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c25-gabi-extract-lambda:latest"
 
     memory_size = 512
     timeout = 60
@@ -256,3 +256,32 @@ resource "aws_lambda_permission" "api_gateway" {
 
 # ECS and Dashboard Configuration
 
+
+data "aws_vpc" "selected" {
+  id = var.vpc_id
+}
+
+resource "aws_security_group" "task_sg" {
+  name        = "c25-gabi-dashboard-task-sg"
+  vpc_id      = var.vpc_id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+resource "aws_ecs_service" "c25_gabi_dashboard" {
+  name            = "c25-gabi-dashboard"
+  cluster         = "c25-ecs-cluster"
+  task_definition = aws_ecs_task_definition.c25_gabi_task.arn
+  desired_count   = 1
+
+  launch_type = "FARGATE"
+
+  network_configuration {
+    subnets         = var.subnet_ids
+    security_groups = [aws_security_group.task_sg.id]
+  }
+}
