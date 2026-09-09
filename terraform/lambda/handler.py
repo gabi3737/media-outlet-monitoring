@@ -42,7 +42,6 @@ def handler(event, context):
 
 
 def get_keywords(event):
-    # TODO: Implement after adding a DynamoDB GSI (e.g., "keyword-index") and writing the keyword attribute during ingestion.
     return respond(501, {"error": "GET /keywords/{keyword} is not implemented yet."})
 
 
