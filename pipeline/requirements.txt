@@ -9,4 +9,6 @@ feedparser
 newspaper3k
 lxml[html-clean]
 pytest-cov
-nltk
+spacy
+spacytextblob
+textblob

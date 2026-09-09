@@ -4,8 +4,9 @@ The transform aspect of the pipeline
 import logging
 from datetime import datetime, timezone
 import pandas as pd
-import nltk
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
+import spacy
+from spacytextblob.spacytextblob import SpacyTextBlob
+import spacy.cli
 
 
 def clean_publication_time(data: pd.DataFrame) -> pd.DataFrame:
@@ -62,28 +63,24 @@ def clean_author_column(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def get_sentiment(vader: SentimentIntensityAnalyzer, content: str) -> float:
+def get_sentiment_spacey(nlp: SpacyTextBlob, content: str) -> float:
     """Returns the average sentiment score of an article"""
     logging.info("Adding a sentiment column")
-    if content is None:
-        return 0.0
-    content = content.split('.')
-    score = 0
-    for sentence in content:
-        score += vader.polarity_scores(sentence)['compound']
-    return score / len(content)
+    doc = nlp(content)
+    return doc._.blob.polarity
 
 
 if __name__ == "__main__":
 
-    # Set up transform:
+    # Set up:
     logging.basicConfig(level=logging.INFO)
 
-    nltk.download('vader_lexicon')
-    logging.info("Installed vader_lexicon")
+    # Set up for sentiment:
+    spacy.cli.download("en_core_web_sm")
+    nlp = spacy.load('en_core_web_sm')
+    nlp.add_pipe('spacytextblob')
 
-    vader = SentimentIntensityAnalyzer()
-
+    # TODO: Make changes to connect to the extract.py later
     # Set up data:
     data = pd.read_csv("pipeline/data/wired_ai_feed.csv")
     # data = pd.read_csv("pipeline/data/venturebeat_ai_feed.csv")
@@ -95,11 +92,11 @@ if __name__ == "__main__":
 
     # Get sentiment of articles
     data['sentiment'] = data['content'].apply(
-        lambda x: get_sentiment(vader, x))
-
-    print(get_sentiment(vader, None))
+        lambda x: get_sentiment_spacey(nlp, x))
 
     logging.info("Successfully cleaned the dataframe")
 
+    # TODO: Delete before submission
+    # Check output:
     with pd.option_context("display.max_colwidth", None):
         print(data['sentiment'].to_string())
