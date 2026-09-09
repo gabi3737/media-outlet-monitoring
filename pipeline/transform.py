@@ -63,7 +63,7 @@ def clean_author_column(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def get_sentiment_spacey(nlp: SpacyTextBlob, content: str) -> float:
+def get_sentiment(nlp: SpacyTextBlob, content: str) -> float:
     """Returns the average sentiment score of an article"""
     logging.info("Adding a sentiment column")
     doc = nlp(content)
