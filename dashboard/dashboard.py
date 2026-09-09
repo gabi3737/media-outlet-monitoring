@@ -42,6 +42,33 @@ if __name__ == "__main__":
     # Streamlit:
     st.markdown("# Otranto Development: AI Media Analysis")
 
+    # Side Bar
+    with st.sidebar:
+        st.markdown("## Filters")
+        companies = data["companies"].explode().dropna().unique()
+        selected_companies = st.sidebar.multiselect(
+            "Companies:",
+            companies,
+            default=companies,
+            key="company_filter"
+        )
+
+        individuals = data["individuals"].explode().dropna().unique()
+        selected_individuals = st.sidebar.multiselect(
+            "Individuals:",
+            individuals,
+            default=individuals,
+            key="individual_filter"
+        )
+
+        key_words = data["tags"].explode().dropna().unique()
+        selected_tags = st.sidebar.multiselect(
+            "Key Words:",
+            key_words,
+            default=key_words,
+            key="tags_filter"
+        )
+
     # Metrics
     st.markdown("## Overview")
     col1, col2, col3 = st.columns(3)

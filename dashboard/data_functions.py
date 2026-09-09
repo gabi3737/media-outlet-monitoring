@@ -15,7 +15,8 @@ def get_clean_data(data: pd.DataFrame) -> pd.DataFrame:
 
     data['tags'] = (
         data['tags'].str.replace('[', '')
-        .str.replace(']', '').str.split(', ')
+        .str.replace(']', '').str.replace("'", "")
+        .str.split(', ')
     )
 
     data['individuals'] = (
