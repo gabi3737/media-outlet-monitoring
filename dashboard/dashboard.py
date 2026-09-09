@@ -9,6 +9,7 @@ import pandas as pd
 
 from data_functions import (
     get_clean_data,
+    get_average_sentiment,
     get_company_mention_count
 )
 
@@ -52,13 +53,12 @@ if __name__ == "__main__":
     with col2:
         st.metric(
             "Average Sentiment",
-            f"{round(data['sentiment'].mean(), 2)}"
+            get_average_sentiment(data)
         )
     with col3:
         st.metric(
             "Company Mention Count",
-            f"{get_company_mention_count(data)}"
+            get_company_mention_count(data)
         )
 
     st.dataframe(data)
-    st.markdown(data.dtypes)

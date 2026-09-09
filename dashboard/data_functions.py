@@ -31,6 +31,11 @@ def get_clean_data(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
+def get_average_sentiment(data: pd.DataFrame) -> float:
+    """Returns the average sentiment"""
+    return round(data['sentiment'].mean(), 2)
+
+
 def get_company_mention_count(data: pd.DataFrame) -> int:
     """Returns the count of companies mentioned"""
-    data['companies']
+    return data["companies"].explode().nunique()
