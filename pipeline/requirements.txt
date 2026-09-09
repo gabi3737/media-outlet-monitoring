@@ -3,7 +3,6 @@ python-dotenv
 pandas
 pytest
 pylint
-logging
 requests
 feedparser
 pytest-cov
