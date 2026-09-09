@@ -4,6 +4,7 @@ import logging
 import uuid
 import boto3
 import pandas as pd
+from decimal import Decimal
 from extract import extract_all_feeds
 from transform import transform_data
 
@@ -72,6 +73,13 @@ def load_data(data: pd.DataFrame) -> None:
     data_records = data.to_dict('records')
 
     for item in data_records:
+        # Convert sentiment to Decimal (number type in DynamoDB) with 2 decimal places
+        sentiment_value = item.get('sentiment', 0.0)
+        try:
+            sentiment_decimal = Decimal(str(round(float(sentiment_value), 2)))
+        except (ValueError, TypeError):
+            sentiment_decimal = Decimal('0.00')
+
         # Use existing columns or defaults for missing ones
         table.put_item(
             Item={
@@ -84,7 +92,7 @@ def load_data(data: pd.DataFrame) -> None:
                 'content': str(item.get('content', 'N/A')),
                 'individuals': str(item.get('individuals', 'N/A')),
                 'companies': str(item.get('companies', 'N/A')),
-                'sentiment': str(item.get('sentiment', 'N/A'))
+                'sentiment': sentiment_decimal
             }
         )
         logging.debug(
