@@ -13,3 +13,15 @@ To run the dashboard:
 ```bash
 streamlit run app.py
 ```
+
+To Dockerise the dashboard:
+
+```bash
+docker buildx build -t dashboard .
+```
+
+To run the dashboard on Docker:
+
+```bash
+docker run -p 8501:8501 dashboard
+```
