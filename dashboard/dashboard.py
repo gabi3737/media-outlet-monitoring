@@ -8,4 +8,4 @@ import altair as alt
 
 if __name__ == "__main__":
 
-    pass
+    st.markdown("# Otranto Development: AI Media Analysis")
