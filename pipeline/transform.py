@@ -107,7 +107,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     # Get the directory of this script
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    csv_path = os.path.join(script_dir, "data", "wired_ai_feed.csv")
+    csv_path = os.path.join(script_dir, "data", "venturebeat_ai_feed.csv")
 
     data = pd.read_csv(csv_path)
 

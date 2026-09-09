@@ -5,10 +5,12 @@ convert them into pandas DataFrames, and save them to CSV or JSON files.
 import os
 import argparse
 import logging
+import time
 import feedparser
 import requests
 import pandas as pd
 from newspaper import Article
+from bs4 import BeautifulSoup
 
 # Configure logging
 logging.basicConfig(
@@ -30,8 +32,9 @@ def extract_feed(url):
 
 
 def scrape_article_content(url):
-    """Scrape article content using newspaper3k."""
+    """Scrape article content using newspaper3k with delay to avoid rate limiting."""
     try:
+        time.sleep(1)  # Wait 1 second between requests to avoid rate limiting
         article = Article(url)
         article.download()
         article.parse()
@@ -43,38 +46,38 @@ def scrape_article_content(url):
         return 'N/A'
 
 
-def feed_to_dataframe(feed):
-    """Convert a parsed RSS feed into a pandas DataFrame."""
-    data = []
-    for entry in feed.entries:
-        tags = ', '.join([tag['term'] for tag in entry.get('tags', [])])
-        content = entry.get('summary', 'N/A').replace(',',
-                                                      ';').replace('\n', ' ')
-        data.append({
-            'title': entry.get('title', 'N/A'),
-            'author': entry.get('author', 'N/A'),
-            'published': entry.get('published', 'N/A'),
-            'link': entry.get('link', 'N/A'),
-            'tags': tags if tags else 'N/A',
-            'content': content,
-        })
-        logging.debug(f"Processed entry: {entry.get('title', 'N/A')}")
-    return pd.DataFrame(data)
+def clean_html_content(html_text):
+    """Remove HTML tags and clean up content from RSS summaries."""
+    if not html_text or html_text == 'N/A':
+        return html_text
+
+    soup = BeautifulSoup(html_text, 'html.parser')
+    # Get all text and normalize whitespace
+    text = soup.get_text(separator=' ', strip=True)
+    # Clean up multiple spaces
+    text = ' '.join(text.split())
+    return text
 
 
-def wired_feed_to_dataframe(feed):
-    """Convert a parsed RSS feed into a DataFrame, scraping full content for Wired."""
+def feed_to_dataframe(feed, scrape=True):
+    """Convert a parsed RSS feed into a pandas DataFrame.
+
+    Args:
+        feed: Parsed RSS feed
+        scrape: Whether to scrape full article content (True) or use RSS summary (False)
+    """
     data = []
     for entry in feed.entries:
         tags = ', '.join([tag['term'] for tag in entry.get('tags', [])])
         link = entry.get('link', 'N/A')
 
-        # Scrape full article content instead of using summary
-        if link != 'N/A':
+        # Scrape full article content if requested and link exists
+        if scrape and link != 'N/A':
             content = scrape_article_content(link)
         else:
-            content = entry.get(
-                'summary', 'N/A').replace(',', ';').replace('\n', ' ')
+            # Use RSS summary as fallback or default, cleaning HTML
+            raw_summary = entry.get('summary', 'N/A')
+            content = clean_html_content(raw_summary).replace(',', ';')
 
         data.append({
             'title': entry.get('title', 'N/A'),
@@ -115,10 +118,10 @@ if __name__ == "__main__":
     ext = f'.{args.format}'
     os.makedirs('data', exist_ok=True)
 
-    # VentureBeat: uses summary
+    # VentureBeat: uses RSS summary (don't scrape to avoid rate limiting)
     logging.info("Processing VentureBeat feed")
     feed = extract_feed("https://venturebeat.com/category/ai/feed")
-    df = feed_to_dataframe(feed)
+    df = feed_to_dataframe(feed, scrape=False)
     if args.format == 'json':
         df.to_json(
             f'data/venturebeat_ai_feed{ext}', orient='records', indent=2)
@@ -130,7 +133,7 @@ if __name__ == "__main__":
     # Wired: scrapes full content
     logging.info("Processing Wired feed")
     feed = extract_feed("https://www.wired.com/feed/tag/ai/latest/rss")
-    df = wired_feed_to_dataframe(feed)
+    df = feed_to_dataframe(feed, scrape=True)
     if args.format == 'json':
         df.to_json(f'data/wired_ai_feed{ext}', orient='records', indent=2)
     else:
