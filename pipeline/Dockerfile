@@ -9,4 +9,4 @@ COPY load.py .
 
 RUN pip install -r requirements.txt
 
-CMD python3 extract.py && python3 transform.py && python3 load.py
+CMD [ "load.handler" ]
