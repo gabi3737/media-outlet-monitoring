@@ -73,10 +73,13 @@ def load_data(data: pd.DataFrame) -> None:
     data_records = data.to_dict('records')
 
     for item in data_records:
-        # Convert sentiment to Decimal (number type in DynamoDB) with 2 decimal places
+        # Convert sentiment to DynamoDB Number (Decimal). DynamoDB rejects NaN/Infinity.
         sentiment_value = item.get('sentiment', 0.0)
         try:
-            sentiment_decimal = Decimal(str(round(float(sentiment_value), 2)))
+            sentiment_float = float(sentiment_value)
+            if sentiment_float != sentiment_float or sentiment_float in (float('inf'), float('-inf')):
+                raise ValueError("sentiment must be a finite number")
+            sentiment_decimal = Decimal(f"{sentiment_float:.2f}")
         except (ValueError, TypeError):
             sentiment_decimal = Decimal('0.00')
 
