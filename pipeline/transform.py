@@ -6,13 +6,18 @@ import logging
 from datetime import datetime, timezone
 import pandas as pd
 import spacy
+import spacy.cli
+from spacytextblob.spacytextblob import SpacyTextBlob
+
+# Import extract module for standalone testing
+from extract import extract_all_feeds
 
 
 def load_spacy_model():
     """Load a spacy model for named entity recognition."""
     from spacy.cli import download
 
-    model_name = "en_core_web_sm"
+    model_name = "en_core_web_md"
 
     try:
         nlp = spacy.load(model_name)
@@ -45,6 +50,27 @@ def extract_individuals(data: pd.DataFrame, nlp) -> pd.DataFrame:
     data['individuals'] = individuals_list
     logging.info(
         f"Successfully extracted individuals for {len(data)} articles")
+    return data
+
+
+def extract_companies(data: pd.DataFrame, nlp) -> pd.DataFrame:
+    """Extract company entities from article content using spacy NER."""
+    logging.info("Extracting companies from content")
+
+    companies_list = []
+    for content in data['content']:
+        if isinstance(content, str) and content != 'N/A':
+            doc = nlp(content)
+            # Extract ORG entities
+            companies = list(
+                set([ent.text for ent in doc.ents if ent.label_ == "ORG"]))
+            companies_list.append(', '.join(companies) if companies else 'N/A')
+        else:
+            companies_list.append('N/A')
+
+    data['companies'] = companies_list
+    logging.info(
+        f"Successfully extracted companies for {len(data)} articles")
     return data
 
 
@@ -101,6 +127,12 @@ def clean_author_column(data: pd.DataFrame) -> pd.DataFrame:
 
     return data
 
+def get_sentiment(nlp: SpacyTextBlob, content: str) -> float:
+    """Returns the average sentiment score of an article"""
+    logging.info("Adding a sentiment column")
+    doc = nlp(content)
+    return doc._.blob.polarity
+
 
 def transform_data(data: pd.DataFrame) -> pd.DataFrame:
     """Apply all transformations to the data pipeline.
@@ -112,23 +144,34 @@ def transform_data(data: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: Fully transformed data ready for loading
     """
     logging.info(f"Starting transformation pipeline on {len(data)} rows")
-
     nlp = load_spacy_model()
+    nlp.add_pipe('spacytextblob')
+    
     data = extract_individuals(data, nlp)
+    data = extract_companies(data, nlp)
+    
+    # Clean data:
     data = clean_publication_time(data)
     data = clean_string_columns(data)
     data = clean_author_column(data)
-
     logging.info("Transformation pipeline completed successfully")
     return data
 
 
+
 if __name__ == "__main__":
+
+    # Set up:
     logging.basicConfig(level=logging.INFO)
+    # Get the directory of this script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    csv_path = os.path.join(script_dir, "data", "venturebeat_ai_feed.csv")
 
-    # Import extract module for standalone testing
-    from extract import extract_all_feeds
-
+    # TODO: Make changes to connect to the extract.py later
+    # Set up data:
+    data = pd.read_csv(csv_path)
+   
+    # Set up spacy model:
     # Extract data from feeds
     data = extract_all_feeds()
 
@@ -138,5 +181,15 @@ if __name__ == "__main__":
     logging.info("Successfully transformed the dataframe")
 
     # Display individuals extracted
+    # Get sentiment of articles
+    data['sentiment'] = data['content'].apply(
+        lambda x: get_sentiment(nlp, x))
+
+    logging.info("Successfully cleaned the dataframe")
+
+    # TODO: Delete before submission
+    # Check output:
     with pd.option_context("display.max_colwidth", None):
+        print(data['sentiment'].to_string())
         print(data["individuals"].value_counts())
+        print(data["companies"].value_counts())
