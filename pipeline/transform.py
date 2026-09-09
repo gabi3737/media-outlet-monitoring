@@ -1,6 +1,7 @@
 """
 The transform aspect of the pipeline
 """
+import os
 import logging
 from datetime import datetime, timezone
 import pandas as pd
@@ -85,9 +86,6 @@ def clean_string_columns(data: pd.DataFrame) -> pd.DataFrame:
 if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
-
-    import os
-
     # Get the directory of this script
     script_dir = os.path.dirname(os.path.abspath(__file__))
     csv_path = os.path.join(script_dir, "data", "wired_ai_feed.csv")
