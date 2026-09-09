@@ -8,3 +8,6 @@ requests
 feedparser
 pytest-cov
 spacy
+newspaper3k
+lxml[html-clean]
+pytest-cov
