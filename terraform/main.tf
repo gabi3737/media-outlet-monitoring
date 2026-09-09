@@ -257,31 +257,124 @@ resource "aws_lambda_permission" "api_gateway" {
 # ECS and Dashboard Configuration
 
 
-data "aws_vpc" "selected" {
+data "aws_vpc" "main" {
   id = var.vpc_id
 }
 
-resource "aws_security_group" "task_sg" {
-  name        = "c25-gabi-dashboard-task-sg"
-  vpc_id      = var.vpc_id
+resource "aws_security_group" "ecs_service" {
+  name        = "c25-gabi-dashboard-ecs-sg"
+  vpc_id      = data.aws_vpc.main.id
+
+  ingress {
+    description = "Public access to Streamlit dashboard"
+    from_port   = 8501
+    to_port     = 8501
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] 
   }
 }
+
+resource "aws_iam_role" "ecs_task_execution" {
+  name = "c25-gabi-ecs-task-execution-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Action    = "sts:AssumeRole"
+      Principal = { Service = "ecs-tasks.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
+  role       = aws_iam_role.ecs_task_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+# Container Task Role 
+resource "aws_iam_role" "ecs_task" {
+  name = "c25-gabi-ecs-task-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Action    = "sts:AssumeRole"
+      Principal = { Service = "ecs-tasks.amazonaws.com" }
+    }]
+  })
+}
+
+
+resource "aws_iam_role_policy" "ecs_task_dynamodb" {
+  role = aws_iam_role.ecs_task.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["dynamodb:Query", "dynamodb:GetItem", "dynamodb:Scan"]
+      Resource = [
+        aws_dynamodb_table.c25_gabi_db.arn,
+        "${aws_dynamodb_table.c25_gabi_db.arn}/index/*"
+      ]
+    }]
+  })
+}
+
+resource "aws_cloudwatch_log_group" "dashboard" {
+  name              = "/ecs/c25-gabi-dashboard"
+  retention_in_days = 7
+}
+
+resource "aws_ecs_task_definition" "dashboard" {
+  family                   = "c25-gabi-dashboard"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
+  task_role_arn            = aws_iam_role.ecs_task.arn
+
+  container_definitions = jsonencode([{
+    name      = "dashboard"
+    image     = "" # ADD IMAGE HERE
+    essential = true
+    portMappings = [{
+      containerPort = 8501
+      protocol      = "tcp"
+    }]
+    environment = [
+      { name = "TABLE_NAME", value = aws_dynamodb_table.c25_gabi_db.name }
+    ]
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        "awslogs-group"         = aws_cloudwatch_log_group.dashboard.name
+        "awslogs-region"        = "eu-west-2"
+        "awslogs-stream-prefix" = "ecs"
+      }
+    }
+  }])
+}
+
 resource "aws_ecs_service" "c25_gabi_dashboard" {
   name            = "c25-gabi-dashboard"
   cluster         = "c25-ecs-cluster"
-  task_definition = aws_ecs_task_definition.c25_gabi_task.arn
+  task_definition = aws_ecs_task_definition.dashboard.arn
   desired_count   = 1
 
   launch_type = "FARGATE"
 
   network_configuration {
     subnets         = var.subnet_ids
-    security_groups = [aws_security_group.task_sg.id]
+    security_groups = [aws_security_group.ecs_service.id]
   }
 }
