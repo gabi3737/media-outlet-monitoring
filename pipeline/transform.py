@@ -12,7 +12,7 @@ def load_spacy_model():
     """Load a spacy model for named entity recognition."""
     from spacy.cli import download
 
-    model_name = "en_core_web_sm"
+    model_name = "en_core_web_md"
 
     try:
         nlp = spacy.load(model_name)
@@ -45,6 +45,27 @@ def extract_individuals(data: pd.DataFrame, nlp) -> pd.DataFrame:
     data['individuals'] = individuals_list
     logging.info(
         f"Successfully extracted individuals for {len(data)} articles")
+    return data
+
+
+def extract_companies(data: pd.DataFrame, nlp) -> pd.DataFrame:
+    """Extract company entities from article content using spacy NER."""
+    logging.info("Extracting companies from content")
+
+    companies_list = []
+    for content in data['content']:
+        if isinstance(content, str) and content != 'N/A':
+            doc = nlp(content)
+            # Extract ORG entities
+            companies = list(
+                set([ent.text for ent in doc.ents if ent.label_ == "ORG"]))
+            companies_list.append(', '.join(companies) if companies else 'N/A')
+        else:
+            companies_list.append('N/A')
+
+    data['companies'] = companies_list
+    logging.info(
+        f"Successfully extracted companies for {len(data)} articles")
     return data
 
 
@@ -113,6 +134,7 @@ if __name__ == "__main__":
 
     nlp = load_spacy_model()
     data = extract_individuals(data, nlp)
+    data = extract_companies(data, nlp)
     data = clean_publication_time(data)
     data = clean_string_columns(data)
     data = clean_author_column(data)
@@ -121,3 +143,4 @@ if __name__ == "__main__":
 
     with pd.option_context("display.max_colwidth", None):
         print(data["individuals"].value_counts())
+        print(data["companies"].value_counts())
