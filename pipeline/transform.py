@@ -17,6 +17,12 @@ def load_spacy_model():
     from spacy.cli import download
 
     model_name = "en_core_web_md"
+    # In Lambda, look for pre-downloaded model first
+    lambda_models_path = os.path.join(os.getcwd(), "models", model_name)
+    if os.path.exists(lambda_models_path):
+        logging.info(
+            f"Loading spacy model from Lambda path: {lambda_models_path}")
+        return spacy.load(lambda_models_path)
 
     nlp = spacy.load(model_name)
     logging.info(f"Successfully loaded spacy model: {model_name}")
