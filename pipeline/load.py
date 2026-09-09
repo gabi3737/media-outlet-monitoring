@@ -21,8 +21,34 @@ def connect_to_db():
     return table
 
 
+def get_most_recent_date(table) -> str:
+    """Get the most recent published date from the DynamoDB table."""
+
+    logging.debug("Fetching the most recent published date from DynamoDB.")
+
+    dates = table.scan(
+        ProjectionExpression="published"
+    )
+
+    published_dates = []
+
+    for item in dates.get('Items', []):
+        published_dates.append(pd.to_datetime(item['published']))
+
+    if not published_dates:
+        logging.debug("No published dates found in DynamoDB.")
+        return None
+
+    max_date = max(published_dates)
+    return max_date
+
+
 def load_data(data: pd.DataFrame) -> None:
     """Load scraped data into DynamoDB."""
+
+    if data.empty:
+        logging.warning("No data to load into DynamoDB.")
+        return None
 
     table = connect_to_db()
 
@@ -30,9 +56,15 @@ def load_data(data: pd.DataFrame) -> None:
         logging.error("Failed to connect to DynamoDB.")
         return None
 
-    if data.empty:
-        logging.warning("No data to load into DynamoDB.")
-        return None
+    most_recent_date = get_most_recent_date(table)
+    logging.info(f"Most recent published date in DynamoDB: {most_recent_date}")
+
+    if most_recent_date is not None:
+        data = data[pd.to_datetime(data['published']) > most_recent_date]
+
+        if data.empty:
+            logging.info("DynamoDB contains all the most recent data.")
+            return None
 
     logging.info("Starting to load data into DynamoDB.")
     logging.info(f"Length of data to load into DynamoDB: {len(data)}")
