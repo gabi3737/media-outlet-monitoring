@@ -127,12 +127,12 @@ def test_clean_author_column_valid(valid_dataframe):
 
 
 def test_clean_author_column_empty(empty_dataframe):
-    """Tests the clean_author_column with valid data"""
+    """Tests the clean_author_column with null values"""
     result = clean_author_column(empty_dataframe)
     assert result["author"].iloc[0] is None
 
 
 def test_clean_author_column_invalid(invalid_dataframe):
-    """Tests the clean_author_column with valid data"""
+    """Tests the clean_author_column with invalid data"""
     result = clean_author_column(invalid_dataframe)
     assert result["author"].iloc[0] == ["123"]

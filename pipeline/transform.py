@@ -4,6 +4,8 @@ The transform aspect of the pipeline
 import logging
 from datetime import datetime, timezone
 import pandas as pd
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 
 def clean_publication_time(data: pd.DataFrame) -> pd.DataFrame:
@@ -60,18 +62,44 @@ def clean_author_column(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
+def get_sentiment(vader: SentimentIntensityAnalyzer, content: str) -> float:
+    """Returns the average sentiment score of an article"""
+    logging.info("Adding a sentiment column")
+    if content is None:
+        return 0.0
+    content = content.split('.')
+    score = 0
+    for sentence in content:
+        score += vader.polarity_scores(sentence)['compound']
+    return score / len(content)
+
+
 if __name__ == "__main__":
 
+    # Set up transform:
     logging.basicConfig(level=logging.INFO)
 
+    nltk.download('vader_lexicon')
+    logging.info("Installed vader_lexicon")
+
+    vader = SentimentIntensityAnalyzer()
+
+    # Set up data:
     data = pd.read_csv("pipeline/data/wired_ai_feed.csv")
     # data = pd.read_csv("pipeline/data/venturebeat_ai_feed.csv")
 
+    # Clean data:
     data = clean_publication_time(data)
     data = clean_string_columns(data)
     data = clean_author_column(data)
 
+    # Get sentiment of articles
+    data['sentiment'] = data['content'].apply(
+        lambda x: get_sentiment(vader, x))
+
+    print(get_sentiment(vader, None))
+
     logging.info("Successfully cleaned the dataframe")
 
     with pd.option_context("display.max_colwidth", None):
-        print(data['author'].to_string())
+        print(data['sentiment'].to_string())
