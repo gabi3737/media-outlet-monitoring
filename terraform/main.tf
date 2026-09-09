@@ -164,7 +164,7 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
 }
 
 resource "aws_iam_role_policy" "lambda_dynamodb" {
-  name = "lambda-dynamodb-access"
+  name = "c25-gabi-lambda-dynamodb-access"
   role = aws_iam_role.lambda_exec.id
 
   policy = jsonencode({
