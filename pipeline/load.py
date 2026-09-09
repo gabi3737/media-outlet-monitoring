@@ -94,12 +94,35 @@ def load_data(data: pd.DataFrame) -> None:
     return None
 
 
-def run_full_pipeline(use_db=True, extract_only=False) -> pd.DataFrame:
+def save_data_locally(data: pd.DataFrame, format='csv') -> None:
+    """Save transformed data to local CSV or JSON file.
+
+    Args:
+        data: DataFrame to save
+        format: Output format ('csv' or 'json')
+    """
+    import os
+    os.makedirs('data', exist_ok=True)
+
+    timestamp = pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')
+    filename = f"data/transformed_feed_{timestamp}"
+
+    if format == 'json':
+        data.to_json(f"{filename}.json", orient='records', indent=2)
+        logging.info(f"✓ Saved {len(data)} articles to {filename}.json")
+    else:
+        data.to_csv(f"{filename}.csv", index=False)
+        logging.info(f"✓ Saved {len(data)} articles to {filename}.csv")
+
+
+def run_full_pipeline(use_db=True, extract_only=False, save_local=False, local_format='csv') -> pd.DataFrame:
     """Run the complete data pipeline: extract → transform → load.
 
     Args:
         use_db: Whether to load data to DynamoDB (default: True)
         extract_only: Only run extract, skip transform and load (default: False)
+        save_local: Save transformed data to local file instead of DB (default: False)
+        local_format: Format for local save ('csv' or 'json', default: 'csv')
 
     Returns:
         pd.DataFrame: Transformed data that was loaded (or would be loaded)
@@ -122,8 +145,11 @@ def run_full_pipeline(use_db=True, extract_only=False) -> pd.DataFrame:
     data = transform_data(data)
     logging.info(f"✓ Transformed {len(data)} articles")
 
-    # Step 3: Load to DynamoDB
-    if use_db:
+    # Step 3: Save/Load data
+    if save_local:
+        logging.info("\n[STEP 3/3] Saving data locally...")
+        save_data_locally(data, format=local_format)
+    elif use_db:
         logging.info("\n[STEP 3/3] Loading data to DynamoDB...")
         load_data(data)
         logging.info(f"✓ Loaded {len(data)} articles to DynamoDB")
@@ -146,12 +172,18 @@ if __name__ == "__main__":
                         help='Skip loading to DynamoDB')
     parser.add_argument('--extract-only', action='store_true',
                         help='Only run extract step, skip transform and load')
+    parser.add_argument('--save-local', action='store_true',
+                        help='Save transformed data to local file instead of DynamoDB')
+    parser.add_argument('--format', choices=['csv', 'json'], default='csv',
+                        help='Format for local save (default: csv)')
     args = parser.parse_args()
 
     # Run the complete pipeline
     data = run_full_pipeline(
         use_db=not args.no_db,
-        extract_only=args.extract_only
+        extract_only=args.extract_only,
+        save_local=args.save_local,
+        local_format=args.format
     )
 
     logging.info(f"\nFinal dataset shape: {data.shape}")

@@ -99,7 +99,7 @@ def extract_all_feeds(save_local=False, format='csv'):
         format: Output format if save_local=True ('csv' or 'json')
 
     Returns:
-        pd.DataFrame: Combined dataframe from all feeds with 'source' column
+        pd.DataFrame: Combined dataframe from all feeds
     """
     logging.info("Extracting all feeds")
 
@@ -109,7 +109,6 @@ def extract_all_feeds(save_local=False, format='csv'):
     logging.info("Processing VentureBeat feed")
     vb_feed = extract_feed("https://venturebeat.com/category/ai/feed")
     vb_df = feed_to_dataframe(vb_feed, scrape=False)
-    vb_df['source'] = 'VentureBeat'
     dataframes.append(vb_df)
     logging.info(f"Extracted {len(vb_df)} entries from VentureBeat")
 
@@ -117,7 +116,6 @@ def extract_all_feeds(save_local=False, format='csv'):
     logging.info("Processing Wired feed")
     wired_feed = extract_feed("https://www.wired.com/feed/tag/ai/latest/rss")
     wired_df = feed_to_dataframe(wired_feed, scrape=True)
-    wired_df['source'] = 'Wired'
     dataframes.append(wired_df)
     logging.info(f"Extracted {len(wired_df)} entries from Wired")
 
