@@ -9,4 +9,4 @@ COPY load.py .
 
 RUN pip install -r requirements.txt
 
-CMD [ "load.handler" ]
+CMD [ "load.lambda_handler" ]
