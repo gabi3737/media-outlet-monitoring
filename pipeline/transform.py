@@ -83,7 +83,7 @@ def clean_string_columns(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def clean_author_column(data: pd.DataFrame) -> pd.DataFrame:
-    """Returns the dataframe with a cleaned author column"""
+    """Returns the dataframe with a cleaned author column."""
     logging.info("Cleaning the author column")
     data['author'] = (
         data['author']
@@ -102,14 +102,16 @@ def clean_author_column(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-if __name__ == "__main__":
+def transform_data(data: pd.DataFrame) -> pd.DataFrame:
+    """Apply all transformations to the data pipeline.
 
-    logging.basicConfig(level=logging.INFO)
-    # Get the directory of this script
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    csv_path = os.path.join(script_dir, "data", "venturebeat_ai_feed.csv")
+    Args:
+        data: Input DataFrame from extract_all_feeds()
 
-    data = pd.read_csv(csv_path)
+    Returns:
+        pd.DataFrame: Fully transformed data ready for loading
+    """
+    logging.info(f"Starting transformation pipeline on {len(data)} rows")
 
     nlp = load_spacy_model()
     data = extract_individuals(data, nlp)
@@ -117,7 +119,24 @@ if __name__ == "__main__":
     data = clean_string_columns(data)
     data = clean_author_column(data)
 
-    logging.info("Successfully cleaned the dataframe")
+    logging.info("Transformation pipeline completed successfully")
+    return data
 
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+
+    # Import extract module for standalone testing
+    from extract import extract_all_feeds
+
+    # Extract data from feeds
+    data = extract_all_feeds()
+
+    # Transform the data
+    data = transform_data(data)
+
+    logging.info("Successfully transformed the dataframe")
+
+    # Display individuals extracted
     with pd.option_context("display.max_colwidth", None):
         print(data["individuals"].value_counts())
