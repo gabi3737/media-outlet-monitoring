@@ -91,19 +91,50 @@ def feed_to_dataframe(feed, scrape=True):
     return pd.DataFrame(data)
 
 
-def fetch_and_save(url, filename, format='csv'):
-    """Fetch an RSS feed from the given URL, convert it to a DataFrame, and save it to a file."""
-    logging.info(f"Processing feed: {url}")
-    feed = extract_feed(url)
-    df = feed_to_dataframe(feed)
-    os.makedirs('data', exist_ok=True)
+def extract_all_feeds(save_local=False, format='csv'):
+    """Extract all feeds and combine into single DataFrame.
 
-    if format == 'json':
-        df.to_json(f'data/{filename}', orient='records', indent=2)
-    else:
-        df.to_csv(f'data/{filename}', index=False)
+    Args:
+        save_local: Whether to save to local CSV/JSON files (default: False)
+        format: Output format if save_local=True ('csv' or 'json')
 
-    logging.info(f"Saved {len(df)} entries to data/{filename} ({format})")
+    Returns:
+        pd.DataFrame: Combined dataframe from all feeds
+    """
+    logging.info("Extracting all feeds")
+
+    dataframes = []
+
+    # VentureBeat: uses RSS summary (don't scrape to avoid rate limiting)
+    logging.info("Processing VentureBeat feed")
+    vb_feed = extract_feed("https://venturebeat.com/category/ai/feed")
+    vb_df = feed_to_dataframe(vb_feed, scrape=False)
+    dataframes.append(vb_df)
+    logging.info(f"Extracted {len(vb_df)} entries from VentureBeat")
+
+    # Wired: scrapes full content
+    logging.info("Processing Wired feed")
+    wired_feed = extract_feed("https://www.wired.com/feed/tag/ai/latest/rss")
+    wired_df = feed_to_dataframe(wired_feed, scrape=True)
+    dataframes.append(wired_df)
+    logging.info(f"Extracted {len(wired_df)} entries from Wired")
+
+    # Combine all dataframes
+    combined_df = pd.concat(dataframes, ignore_index=True)
+    logging.info(f"Combined {len(combined_df)} total entries from all sources")
+
+    # Optionally save to local files
+    if save_local:
+        os.makedirs('data', exist_ok=True)
+        ext = f'.{format}'
+        if format == 'json':
+            combined_df.to_json(
+                f'data/combined_ai_feed{ext}', orient='records', indent=2)
+        else:
+            combined_df.to_csv(f'data/combined_ai_feed{ext}', index=False)
+        logging.info(f"Saved combined feed to data/combined_ai_feed{ext}")
+
+    return combined_df
 
 
 if __name__ == "__main__":
@@ -111,34 +142,14 @@ if __name__ == "__main__":
         description='Extract AI feeds from RSS sources')
     parser.add_argument('--format', choices=['csv', 'json'], default='csv',
                         help='Output format (default: csv)')
+    parser.add_argument('--save-local', action='store_true',
+                        help='Save extracted data to local CSV/JSON files')
     args = parser.parse_args()
 
     logging.info(f"Starting feed extraction (format: {args.format})")
 
-    ext = f'.{args.format}'
-    os.makedirs('data', exist_ok=True)
-
-    # VentureBeat: uses RSS summary (don't scrape to avoid rate limiting)
-    logging.info("Processing VentureBeat feed")
-    feed = extract_feed("https://venturebeat.com/category/ai/feed")
-    df = feed_to_dataframe(feed, scrape=False)
-    if args.format == 'json':
-        df.to_json(
-            f'data/venturebeat_ai_feed{ext}', orient='records', indent=2)
-    else:
-        df.to_csv(f'data/venturebeat_ai_feed{ext}', index=False)
-    logging.info(
-        f"Saved {len(df)} entries to data/venturebeat_ai_feed{ext} ({args.format})")
-
-    # Wired: scrapes full content
-    logging.info("Processing Wired feed")
-    feed = extract_feed("https://www.wired.com/feed/tag/ai/latest/rss")
-    df = feed_to_dataframe(feed, scrape=True)
-    if args.format == 'json':
-        df.to_json(f'data/wired_ai_feed{ext}', orient='records', indent=2)
-    else:
-        df.to_csv(f'data/wired_ai_feed{ext}', index=False)
-    logging.info(
-        f"Saved {len(df)} entries to data/wired_ai_feed{ext} ({args.format})")
+    # Extract all feeds
+    combined_df = extract_all_feeds(
+        save_local=args.save_local, format=args.format)
 
     logging.info("Feed extraction completed successfully")
