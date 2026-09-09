@@ -6,6 +6,8 @@ import logging
 from datetime import datetime, timezone
 import pandas as pd
 import spacy
+import spacy.cli
+from spacytextblob.spacytextblob import SpacyTextBlob
 
 
 def load_spacy_model():
@@ -123,24 +125,46 @@ def clean_author_column(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
+def get_sentiment(nlp: SpacyTextBlob, content: str) -> float:
+    """Returns the average sentiment score of an article"""
+    logging.info("Adding a sentiment column")
+    doc = nlp(content)
+    return doc._.blob.polarity
+
+
 if __name__ == "__main__":
 
+    # Set up:
     logging.basicConfig(level=logging.INFO)
     # Get the directory of this script
     script_dir = os.path.dirname(os.path.abspath(__file__))
     csv_path = os.path.join(script_dir, "data", "venturebeat_ai_feed.csv")
 
+    # TODO: Make changes to connect to the extract.py later
+    # Set up data:
     data = pd.read_csv(csv_path)
-
+   
+    # Set up spacy model:
     nlp = load_spacy_model()
+    nlp.add_pipe('spacytextblob')
+    
     data = extract_individuals(data, nlp)
     data = extract_companies(data, nlp)
+    
+    # Clean data:
     data = clean_publication_time(data)
     data = clean_string_columns(data)
     data = clean_author_column(data)
 
+    # Get sentiment of articles
+    data['sentiment'] = data['content'].apply(
+        lambda x: get_sentiment(nlp, x))
+
     logging.info("Successfully cleaned the dataframe")
 
+    # TODO: Delete before submission
+    # Check output:
     with pd.option_context("display.max_colwidth", None):
+        print(data['sentiment'].to_string())
         print(data["individuals"].value_counts())
         print(data["companies"].value_counts())
