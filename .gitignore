@@ -107,4 +107,6 @@ pipeline/data/*
 *.xml
 *.rss
 
+pipeline/models/*
+
 interview/
