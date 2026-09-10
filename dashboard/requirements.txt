@@ -3,3 +3,6 @@ pandas
 python-dotenv
 pytest
 pylint
+altair
+boto3
+wordcloud

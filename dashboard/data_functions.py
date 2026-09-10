@@ -99,3 +99,81 @@ def get_daily_sentiment(data: pd.DataFrame, top_companies: list) -> pd.DataFrame
         .mean()
         .reset_index()
     )
+
+
+def get_company_wordcloud_data(data: pd.DataFrame) -> pd.DataFrame:
+    """Returns company mention counts for wordcloud visualization"""
+    if data.empty:
+        return pd.DataFrame(columns=['companies', 'count'])
+
+    # Explode and filter out empty strings and NaN values
+    company_counts = (
+        data.explode("companies")
+        .dropna(subset=['companies'])
+        .query("companies != ''")
+        .groupby("companies")
+        .size()
+        .reset_index(name="count")
+    )
+    return company_counts.sort_values(by="count", ascending=False)
+
+
+def get_individual_wordcloud_data(data: pd.DataFrame) -> pd.DataFrame:
+    """Returns individual mention counts for wordcloud visualization"""
+    if data.empty:
+        return pd.DataFrame(columns=['individuals', 'count'])
+
+    # Explode and filter out empty strings and NaN values
+    individual_counts = (
+        data.explode("individuals")
+        .dropna(subset=['individuals'])
+        .query("individuals != ''")
+        .groupby("individuals")
+        .size()
+        .reset_index(name="count")
+    )
+    return individual_counts.sort_values(by="count", ascending=False)
+
+
+def get_companies_over_time(data: pd.DataFrame) -> pd.DataFrame:
+    """Returns cumulative company mention counts over time"""
+    if data.empty:
+        return pd.DataFrame(columns=['published', 'companies', 'count'])
+    
+    # Explode companies and count by date
+    companies_time = (
+        data.explode("companies")
+        .dropna(subset=['companies'])
+        .query("companies != ''")
+        .groupby(['published', 'companies'])
+        .size()
+        .reset_index(name='daily_count')
+    )
+    
+    # Sort by date and calculate cumulative sum for each company
+    companies_time = companies_time.sort_values('published')
+    companies_time['count'] = companies_time.groupby('companies')['daily_count'].cumsum()
+    
+    return companies_time[['published', 'companies', 'count']]
+
+
+def get_individuals_over_time(data: pd.DataFrame) -> pd.DataFrame:
+    """Returns cumulative individual mention counts over time"""
+    if data.empty:
+        return pd.DataFrame(columns=['published', 'individuals', 'count'])
+    
+    # Explode individuals and count by date
+    individuals_time = (
+        data.explode("individuals")
+        .dropna(subset=['individuals'])
+        .query("individuals != ''")
+        .groupby(['published', 'individuals'])
+        .size()
+        .reset_index(name='daily_count')
+    )
+    
+    # Sort by date and calculate cumulative sum for each individual
+    individuals_time = individuals_time.sort_values('published')
+    individuals_time['count'] = individuals_time.groupby('individuals')['daily_count'].cumsum()
+    
+    return individuals_time[['published', 'individuals', 'count']]
