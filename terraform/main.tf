@@ -172,7 +172,7 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
     Version = "2012-10-17"
     Statement = [{
       Effect   = "Allow"
-      Action   = ["dynamodb:Query", "dynamodb:GetItem"]
+      Action   = ["dynamodb:Query", "dynamodb:GetItem", "dynamodb:Scan"]
       Resource = [
         aws_dynamodb_table.c25_gabi_db.arn,
         "${aws_dynamodb_table.c25_gabi_db.arn}/index/*"
