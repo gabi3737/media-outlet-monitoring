@@ -43,7 +43,14 @@ def handler(event, context):
 
 
 def get_keywords(event):
-    return respond(501, {"error": "GET /keywords/{keyword} is not implemented yet."})
+    response = table.query(
+        KeyConditionExpression=Key("tags").eq(
+            event["pathParameters"]["keyword"]),
+        ScanIndexForward=False,
+        Limit=10,
+    )
+    items = response.get("Items", [])
+    return respond(200, items)
 
 
 def get_article(event):
