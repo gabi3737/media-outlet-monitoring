@@ -92,6 +92,7 @@ venv/
 *.tfvars
 .terraform
 *.tfstate
+*.tfstate.backup
 
 .venv
 

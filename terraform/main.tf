@@ -376,5 +376,6 @@ resource "aws_ecs_service" "c25_gabi_dashboard" {
   network_configuration {
     subnets         = var.subnet_ids
     security_groups = [aws_security_group.ecs_service.id]
+    assign_public_ip = true
   }
 }
