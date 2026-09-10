@@ -57,11 +57,13 @@ jobs:
             - name: Lint dashboard
               run: |
                 pylint \
+                  --recursive=y \
                   --fail-under=6 \
                   dashboard/
 
             - name: Lint pipeline
               run: |
                 pylint \
+                  --recursive=y \
                   --fail-under=6 \
                   pipeline/
