@@ -6,7 +6,9 @@ import streamlit as st
 import altair as alt
 import boto3
 import pandas as pd
+from wordcloud import WordCloud
 from datetime import date
+import matplotlib.pyplot as plt
 
 from data_functions import (
     get_clean_data,
@@ -16,6 +18,10 @@ from data_functions import (
     get_average_sentiment_by_company,
     get_average_sentiment_for_top_companies,
     get_daily_sentiment,
+    get_company_wordcloud_data,
+    get_individual_wordcloud_data,
+    get_companies_over_time,
+    get_individuals_over_time,
 )
 
 
@@ -144,6 +150,97 @@ def top_ten_companies_daily_sentiment(data: pd.DataFrame) -> alt.Chart:
     )
 
 
+def company_wordcloud_traditional(data: pd.DataFrame):
+    """Generate a traditional wordcloud for company mentions using wordcloud library."""
+    company_data = get_company_wordcloud_data(data)
+
+    if company_data.empty:
+        st.write("No data available for wordcloud")
+        return
+
+    # Create a dictionary of company: count
+    word_freq = dict(zip(company_data['companies'], company_data['count']))
+
+    # Generate wordcloud
+    wordcloud = WordCloud(
+        width=1200,
+        height=400,
+        background_color='black',
+        colormap='Greens',
+        relative_scaling=0.5,
+        min_font_size=10
+    ).generate_from_frequencies(word_freq)
+
+    # Display using matplotlib
+    fig, ax = plt.subplots(figsize=(12, 4))
+    ax.imshow(wordcloud, interpolation='bilinear')
+    ax.axis('off')
+    return fig
+
+
+def individual_wordcloud_traditional(data: pd.DataFrame):
+    """Generate a traditional wordcloud for individuals using wordcloud library."""
+    individual_data = get_individual_wordcloud_data(data)
+
+    if individual_data.empty:
+        st.write("No data available for wordcloud")
+        return
+
+    # Create a dictionary of individual: count
+    word_freq = dict(
+        zip(individual_data['individuals'], individual_data['count']))
+
+    # Generate wordcloud
+    wordcloud = WordCloud(
+        width=1200,
+        height=400,
+        background_color='black',
+        colormap='Purples',
+        relative_scaling=0.5,
+        min_font_size=10
+    ).generate_from_frequencies(word_freq)
+
+    # Display using matplotlib
+    fig, ax = plt.subplots(figsize=(12, 4))
+    ax.imshow(wordcloud, interpolation='bilinear')
+    ax.axis('off')
+    return fig
+
+
+def companies_mentions_over_time(data: pd.DataFrame) -> alt.Chart:
+    """Generate a line chart for company mentions over time."""
+    companies_data = get_companies_over_time(data)
+
+    if companies_data.empty:
+        return None
+
+    return alt.Chart(companies_data).mark_line().encode(
+        x=alt.X('published', title='Date'),
+        y=alt.Y('count', title='Mentions'),
+        color=alt.Color('companies', scale=alt.Scale(scheme='set2')),
+        tooltip=['companies', 'published', 'count']
+    ).properties(
+        height=400
+    )
+
+
+def individuals_mentions_over_time(data: pd.DataFrame) -> alt.Chart:
+    """Generate a line chart for individual mentions over time."""
+    individuals_data = get_individuals_over_time(data)
+
+    if individuals_data.empty:
+        return None
+
+    return alt.Chart(individuals_data).mark_line().encode(
+        x=alt.X('published', title='Date'),
+        y=alt.Y('count', title='Mentions'),
+        color=alt.Color('individuals', scale=alt.Scale(scheme='set3')),
+        tooltip=['individuals', 'published', 'count']
+    ).properties(
+        height=400
+    )
+
+
 if __name__ == "__main__":
 
     # Set up data:
@@ -186,6 +283,27 @@ if __name__ == "__main__":
             "Company Mention Count",
             get_company_mention_count(data)
         )
+
+    st.markdown("## Trends")
+    st.markdown("#### Top Companies")
+    wordcloud_fig = company_wordcloud_traditional(data)
+    if wordcloud_fig:
+        st.pyplot(wordcloud_fig, use_container_width=True)
+
+    st.markdown("#### Top Individuals")
+    individual_wordcloud_fig = individual_wordcloud_traditional(data)
+    if individual_wordcloud_fig:
+        st.pyplot(individual_wordcloud_fig, use_container_width=True)
+
+    st.markdown("#### Company Mentions Over Time")
+    companies_chart = companies_mentions_over_time(data)
+    if companies_chart:
+        st.altair_chart(companies_chart, use_container_width=True)
+
+    st.markdown("#### Individual Mentions Over Time")
+    individuals_chart = individuals_mentions_over_time(data)
+    if individuals_chart:
+        st.altair_chart(individuals_chart, use_container_width=True)
 
     st.markdown("## Sentiment Analysis")
     col1, col2 = st.columns(2)
