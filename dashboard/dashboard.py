@@ -10,6 +10,7 @@ from datetime import date
 
 from data_functions import (
     get_clean_data,
+    get_filtered_data,
     get_average_sentiment,
     get_company_mention_count
 )
@@ -70,11 +71,11 @@ if __name__ == "__main__":
             key="authors_filter"
         )
 
-        key_words = data["tags"].explode().dropna().unique()
+        keywords = data["tags"].explode().dropna().unique()
         selected_tags = st.sidebar.multiselect(
             "Key Words:",
-            key_words,
-            default=key_words,
+            keywords,
+            default=keywords,
             key="tags_filter"
         )
 
@@ -92,6 +93,10 @@ if __name__ == "__main__":
             max_value=1.0,
             value=[-1.0, 1.0]
         )
+
+    data = get_filtered_data(data, selected_companies, selected_individuals,
+                             selected_authors, selected_tags, date_range,
+                             sentiment_range)
 
     # Metrics
     st.markdown("## Overview")

@@ -31,11 +31,44 @@ def get_clean_data(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
+def get_filtered_data(data: pd.DataFrame, companies: list[str],
+                      individuals: list[str], authors: list[str],
+                      keywords: list[str], date_range: tuple,
+                      sentiment_range: tuple) -> pd.DataFrame:
+    """Returns a filtered dataframe"""
+    if not data.empty:
+        data = data[data['companies'].apply(
+            lambda x: any(company in companies for company in x))]
+    if not data.empty:
+        data = data[data['individuals'].apply(
+            lambda x: any(individual in individuals for individual in x))]
+    if not data.empty:
+        data = data[data['author'].apply(
+                    lambda x: any(author in authors for author in x))]
+    if not data.empty:
+        data = data[data['tags'].apply(
+                    lambda x: any(keyword in keywords for keyword in x))]
+    if not data.empty:
+        data = data[data['date'].between(
+            date_range[0], date_range[1], inclusive='both')]
+    if not data.empty:
+        data = data[data['sentiment'].between(
+            sentiment_range[0], sentiment_range[1], inclusive='both')]
+
+    return data
+
+
 def get_average_sentiment(data: pd.DataFrame) -> float:
     """Returns the average sentiment"""
-    return round(data['sentiment'].mean(), 2)
+    if not data.empty:
+        return round(data['sentiment'].mean(), 2)
+    else:
+        return 0
 
 
 def get_company_mention_count(data: pd.DataFrame) -> int:
     """Returns the count of companies mentioned"""
-    return data["companies"].explode().nunique()
+    if not data.empty:
+        return data["companies"].explode().nunique()
+    else:
+        return 0
