@@ -136,8 +136,8 @@ def get_articles(event, data):
     period = event.get('queryStringParameters', {}).get('period')
     if period is not None:
         data = get_time_period(data, int(period))
-    data = data.to_dict()
 
+    data = data.to_dict(orient='records')
     return respond(200, data)
 
 

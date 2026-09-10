@@ -45,7 +45,7 @@ def get_individual(data: pd.DataFrame, individual: str) -> dict:
     data = get_clean_data(data)
     data = data[data['individuals'].apply(
         lambda x: individual.lower() in [name.lower() for name in x])]
-    return data.to_dict()
+    return data.to_dict(orient='records')
 
 
 def get_company_from_db(data: pd.DataFrame, company: str) -> dict:
@@ -53,7 +53,7 @@ def get_company_from_db(data: pd.DataFrame, company: str) -> dict:
     data = get_clean_data(data)
     data = data[data['companies'].apply(
         lambda x: company.lower() in [comp.lower() for comp in x])]
-    return data.to_dict()
+    return data.to_dict(orient='records')
 
 
 def get_average_sentiment(data: pd.DataFrame) -> dict:
