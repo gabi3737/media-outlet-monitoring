@@ -37,17 +37,26 @@ def get_filtered_data(data: pd.DataFrame, companies: list[str],
                       sentiment_range: tuple) -> pd.DataFrame:
     """Returns a filtered dataframe"""
     if not data.empty:
-        data = data[data['companies'].apply(
-            lambda x: any(company in companies for company in x))]
+        data['companies'] = data['companies'].apply(
+            lambda x: [company for company in x if company in companies]
+        )
+
     if not data.empty:
-        data = data[data['individuals'].apply(
-            lambda x: any(individual in individuals for individual in x))]
+        data['individuals'] = data['individuals'].apply(
+            lambda x: [
+                individual for individual in x if individual in individuals]
+        )
+
     if not data.empty:
-        data = data[data['author'].apply(
-                    lambda x: any(author in authors for author in x))]
+        data['author'] = data['author'].apply(
+            lambda x: [author for author in x if author in authors]
+        )
+
     if not data.empty:
-        data = data[data['tags'].apply(
-                    lambda x: any(keyword in keywords for keyword in x))]
+        data['tags'] = data['tags'].apply(
+            lambda x: [tag for tag in x if tag in keywords]
+        )
+
     if not data.empty:
         data = data[data['date'].between(
             date_range[0], date_range[1], inclusive='both')]
@@ -139,7 +148,7 @@ def get_companies_over_time(data: pd.DataFrame) -> pd.DataFrame:
     """Returns cumulative company mention counts over time"""
     if data.empty:
         return pd.DataFrame(columns=['published', 'companies', 'count'])
-    
+
     # Explode companies and count by date
     companies_time = (
         data.explode("companies")
@@ -149,11 +158,12 @@ def get_companies_over_time(data: pd.DataFrame) -> pd.DataFrame:
         .size()
         .reset_index(name='daily_count')
     )
-    
+
     # Sort by date and calculate cumulative sum for each company
     companies_time = companies_time.sort_values('published')
-    companies_time['count'] = companies_time.groupby('companies')['daily_count'].cumsum()
-    
+    companies_time['count'] = companies_time.groupby(
+        'companies')['daily_count'].cumsum()
+
     return companies_time[['published', 'companies', 'count']]
 
 
@@ -161,7 +171,7 @@ def get_individuals_over_time(data: pd.DataFrame) -> pd.DataFrame:
     """Returns cumulative individual mention counts over time"""
     if data.empty:
         return pd.DataFrame(columns=['published', 'individuals', 'count'])
-    
+
     # Explode individuals and count by date
     individuals_time = (
         data.explode("individuals")
@@ -171,9 +181,10 @@ def get_individuals_over_time(data: pd.DataFrame) -> pd.DataFrame:
         .size()
         .reset_index(name='daily_count')
     )
-    
+
     # Sort by date and calculate cumulative sum for each individual
     individuals_time = individuals_time.sort_values('published')
-    individuals_time['count'] = individuals_time.groupby('individuals')['daily_count'].cumsum()
-    
+    individuals_time['count'] = individuals_time.groupby('individuals')[
+        'daily_count'].cumsum()
+
     return individuals_time[['published', 'individuals', 'count']]
