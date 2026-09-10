@@ -180,24 +180,16 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
   })
 }
 
-# Passing in ZIP file with Python
-
-data "archive_file" "lambda_zip" {
-  type = "zip"
-  source_dir = "lambda"
-  output_path = "zip/handler.zip"
-}
-
 # Lambda for API Gateway Configuration
 
 resource "aws_lambda_function" "api_handler" {
     function_name = "c25_gabi_gateway_function"
-    runtime = "python3.11"
-    handler = "handler.handler" #Handler function name in Python code
-    filename = data.archive_file.lambda_zip.output_path 
-    source_code_hash = data.archive_file.lambda_zip.output_base64sha256  #Redeploys code when we change it, as Terraform apply doesn't redeploy
+    package_type = "Image"
+    image_uri    = "" # Add API gateway lambda image uri here
     role = aws_iam_role.lambda_exec.arn 
+
     timeout = 20
+    memory_size = 256
     environment {
     variables = {
       TABLE_NAME = aws_dynamodb_table.c25_gabi_db.name
