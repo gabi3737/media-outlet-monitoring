@@ -99,3 +99,37 @@ def get_daily_sentiment(data: pd.DataFrame, top_companies: list) -> pd.DataFrame
         .mean()
         .reset_index()
     )
+
+
+def get_company_wordcloud_data(data: pd.DataFrame) -> pd.DataFrame:
+    """Returns company mention counts for wordcloud visualization"""
+    if data.empty:
+        return pd.DataFrame(columns=['companies', 'count'])
+
+    # Explode and filter out empty strings and NaN values
+    company_counts = (
+        data.explode("companies")
+        .dropna(subset=['companies'])
+        .query("companies != ''")
+        .groupby("companies")
+        .size()
+        .reset_index(name="count")
+    )
+    return company_counts.sort_values(by="count", ascending=False)
+
+
+def get_individual_wordcloud_data(data: pd.DataFrame) -> pd.DataFrame:
+    """Returns individual mention counts for wordcloud visualization"""
+    if data.empty:
+        return pd.DataFrame(columns=['individuals', 'count'])
+
+    # Explode and filter out empty strings and NaN values
+    individual_counts = (
+        data.explode("individuals")
+        .dropna(subset=['individuals'])
+        .query("individuals != ''")
+        .groupby("individuals")
+        .size()
+        .reset_index(name="count")
+    )
+    return individual_counts.sort_values(by="count", ascending=False)
