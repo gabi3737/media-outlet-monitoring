@@ -3,6 +3,7 @@ import os
 import logging
 import boto3
 from decimal import Decimal
+from boto3.dynamodb.conditions import Key
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
