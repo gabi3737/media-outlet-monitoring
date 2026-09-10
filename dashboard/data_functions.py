@@ -8,25 +8,24 @@ import pandas as pd
 def get_clean_data(data: pd.DataFrame) -> pd.DataFrame:
     """Returns a cleaned dataframe"""
     data['published'] = pd.to_datetime(data['published'], errors='coerce')
+    data['date'] = data['published'].dt.date
     data['companies'] = (
         data['companies'].str.replace('[', '')
         .str.replace(']', '').str.split(', ')
     )
-
     data['tags'] = (
         data['tags'].str.replace('[', '')
         .str.replace(']', '').str.replace("'", "")
         .str.split(', ')
     )
-
     data['individuals'] = (
         data['individuals'].str.replace('[', '')
         .str.replace(']', '').str.split(', ')
     )
-
     data['author'] = (
         data['author'].str.replace('[', '')
-        .str.replace(']', '').str.split(', ')
+        .str.replace(']', '').str.replace("'", "")
+        .str.split(', ')
     )
 
     return data

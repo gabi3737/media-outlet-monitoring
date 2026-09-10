@@ -6,6 +6,7 @@ import streamlit as st
 import altair as alt
 import boto3
 import pandas as pd
+from datetime import date
 
 from data_functions import (
     get_clean_data,
@@ -61,12 +62,35 @@ if __name__ == "__main__":
             key="individual_filter"
         )
 
+        authors = data["author"].explode().dropna().unique()
+        selected_authors = st.sidebar.multiselect(
+            "Authors:",
+            authors,
+            default=authors,
+            key="authors_filter"
+        )
+
         key_words = data["tags"].explode().dropna().unique()
         selected_tags = st.sidebar.multiselect(
             "Key Words:",
             key_words,
             default=key_words,
             key="tags_filter"
+        )
+
+        date_range = st.date_input(
+            "Select the date range:",
+            (date(2026, 1, 1), date.today()),
+            date(2026, 1, 1),
+            date.today(),
+            format="DD/MM/YYYY",
+        )
+
+        sentiment_range = st.slider(
+            "Select the sentiment range:",
+            min_value=-1.0,
+            max_value=1.0,
+            value=[-1.0, 1.0]
         )
 
     # Metrics
