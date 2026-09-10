@@ -210,10 +210,10 @@ def individual_wordcloud_traditional(data: pd.DataFrame):
 def companies_mentions_over_time(data: pd.DataFrame) -> alt.Chart:
     """Generate a line chart for company mentions over time."""
     companies_data = get_companies_over_time(data)
-    
+
     if companies_data.empty:
         return None
-    
+
     return alt.Chart(companies_data).mark_line().encode(
         x=alt.X('published', title='Date'),
         y=alt.Y('count', title='Mentions'),
@@ -227,10 +227,10 @@ def companies_mentions_over_time(data: pd.DataFrame) -> alt.Chart:
 def individuals_mentions_over_time(data: pd.DataFrame) -> alt.Chart:
     """Generate a line chart for individual mentions over time."""
     individuals_data = get_individuals_over_time(data)
-    
+
     if individuals_data.empty:
         return None
-    
+
     return alt.Chart(individuals_data).mark_line().encode(
         x=alt.X('published', title='Date'),
         y=alt.Y('count', title='Mentions'),
