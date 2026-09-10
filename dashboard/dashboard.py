@@ -7,6 +7,12 @@ import altair as alt
 import boto3
 import pandas as pd
 
+from data_functions import (
+    get_clean_data,
+    get_average_sentiment,
+    get_company_mention_count
+)
+
 
 @st.cache_data
 def load_data() -> pd.DataFrame:
@@ -28,7 +34,31 @@ def load_data() -> pd.DataFrame:
 
 
 if __name__ == "__main__":
+
+    # Set up data:
     data = load_data()
-    data['published'] = pd.to_datetime(data['published'], errors='coerce')
+    data = get_clean_data(data)
+
+    # Streamlit:
     st.markdown("# Otranto Development: AI Media Analysis")
-    st.metric("Total Articles", len(data))
+
+    # Metrics
+    st.markdown("## Overview")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric(
+            "Total Articles",
+            len(data)
+        )
+    with col2:
+        st.metric(
+            "Average Sentiment",
+            get_average_sentiment(data)
+        )
+    with col3:
+        st.metric(
+            "Company Mention Count",
+            get_company_mention_count(data)
+        )
+
+    st.dataframe(data)
