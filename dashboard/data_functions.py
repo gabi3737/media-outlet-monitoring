@@ -39,3 +39,29 @@ def get_average_sentiment(data: pd.DataFrame) -> float:
 def get_company_mention_count(data: pd.DataFrame) -> int:
     """Returns the count of companies mentioned"""
     return data["companies"].explode().nunique()
+
+
+def get_average_sentiment_by_company(data: pd.DataFrame) -> pd.DataFrame:
+    """Returns the average sentiment grouped by company"""
+    return data.explode("companies").groupby("companies")["sentiment"].mean().round(2).reset_index().sort_values(by="sentiment", ascending=False)
+
+
+def get_average_sentiment_for_top_companies(data: pd.DataFrame) -> pd.DataFrame:
+    """Returns the average sentiment for the top companies by mention count"""
+    counts = data.explode("companies").groupby(
+        "companies").size().reset_index(name="count")
+    means = data.explode("companies").groupby("companies")[
+        "sentiment"].mean().round(2).reset_index(name="mean_sentiment")
+    return counts.merge(means, on="companies").sort_values(by="count", ascending=False)
+
+
+def get_daily_sentiment(data: pd.DataFrame, top_companies: list) -> pd.DataFrame:
+    """Returns the daily sentiment for the top companies"""
+    return (
+        data.explode("companies")
+        .query("companies in @top_companies")
+        .groupby(["companies", "published"])
+        ["sentiment"]
+        .mean()
+        .reset_index()
+    )
