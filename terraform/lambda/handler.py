@@ -27,35 +27,6 @@ def decimal_default(obj):
     raise TypeError
 
 
-def handler(event, context):
-    data = load_data()
-    logger.info("Received event: %s", json.dumps(event))
-    route = event['routeKey']
-    try:
-
-        if route == "GET /person/{person}":
-            return get_person(event, data)
-        elif route == "GET /company/{company}":
-            return get_company(event, data)
-        elif route == "GET /person/{person}/sentiment":
-            return get_person_sentiment(event, data)
-        elif route == "GET /company/{company}/sentiment":
-            return get_company_sentiment(event, data)
-        elif route == "GET /articles":
-            return get_articles(event, data)
-
-        else:
-            return {
-                "statusCode": 404,
-                "body": "Route not found"
-            }
-    except Exception as e:
-        return {
-            "statusCode": 500,
-            "body": str(e)
-        }
-
-
 _data_cache = None
 _cache_timestamp = None
 CACHE_TTL_SECONDS = 3600
@@ -85,31 +56,66 @@ def load_data() -> pd.DataFrame:
     return _data_cache
 
 
+def handler(event, context):
+    data = load_data()
+    logger.info("Received event: %s", json.dumps(event))
+    route = event['routeKey']
+    try:
+
+        if route == "GET /person/{person}":
+            return get_person(event, data)
+        elif route == "GET /company/{company}":
+            return get_company(event, data)
+        elif route == "GET /person/{person}/sentiment":
+            return get_person_sentiment(event, data)
+        elif route == "GET /company/{company}/sentiment":
+            return get_company_sentiment(event, data)
+        elif route == "GET /articles":
+            return get_articles(event, data)
+
+        else:
+            return {
+                "statusCode": 404,
+                "body": "Route not found"
+            }
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "body": str(e)
+        }
+
+
 def get_person(event, data):
     person = event['pathParameters']['person']
+    period = event.get('queryStringParameters', {}).get('period')
 
     return respond(200, data)
 
 
 def get_company(event, data):
     company = event['pathParameters']['company']
+    period = event.get('queryStringParameters', {}).get('period')
 
     return respond(200, data)
 
 
 def get_person_sentiment(event, data):
     person = event['pathParameters']['person']
+    period = event.get('queryStringParameters', {}).get('period')
 
     return respond(200, data)
 
 
 def get_company_sentiment(event, data):
     company = event['pathParameters']['company']
+    period = event.get('queryStringParameters', {}).get('period')
 
     return respond(200, data)
 
 
 def get_articles(event, data):
+    period = event.get('queryStringParameters', {}).get('period')
+
     return respond(200, data)
 
 
