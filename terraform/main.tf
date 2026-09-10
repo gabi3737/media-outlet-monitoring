@@ -60,7 +60,8 @@ resource "aws_iam_role_policy" "lambda_policy" {
 
         Action = [
           "dynamodb:PutItem",
-          "dynamodb:UpdateItem"
+          "dynamodb:UpdateItem",
+          "dynamodb:Scan"
         ]
 
         Resource = aws_dynamodb_table.c25_gabi_db.arn
