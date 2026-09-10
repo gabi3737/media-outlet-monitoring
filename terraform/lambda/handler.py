@@ -2,6 +2,7 @@ import time
 import pandas as pd
 import json
 import os
+from datetime import date, datetime
 import logging
 import boto3
 from decimal import Decimal
@@ -22,7 +23,9 @@ table = dynamodb.Table('c25-gabi-db')
 def decimal_default(obj):
     if isinstance(obj, Decimal):
         return float(obj)
-    raise TypeError
+    if isinstance(obj, (date, datetime, pd.Timestamp)):
+        return obj.isoformat()
+    raise TypeError(f"Type {type(obj)} not serializable")
 
 
 _data_cache = None
@@ -92,6 +95,7 @@ def get_person(event, data):
     result = get_individual(data, person)
 
     return respond(200, result)
+
 
 def get_company(event, data):
     data = data.copy()
