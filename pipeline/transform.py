@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 import pandas as pd
 import spacy
 from spacytextblob.spacytextblob import SpacyTextBlob
+from spacy.cli import download
+
 
 # Import extract module for standalone testing
 from extract import extract_all_feeds
@@ -14,26 +16,14 @@ from extract import extract_all_feeds
 
 def load_spacy_model():
     """Load a spacy model for named entity recognition."""
-    from spacy.cli import download
-
-    model_name = "en_core_web_md"
-    # In Lambda, look for pre-downloaded model first
-    lambda_models_path = os.path.join(os.getcwd(), "models", model_name)
-    if os.path.exists(lambda_models_path):
-        logging.info(
-            f"Loading spacy model from Lambda path: {lambda_models_path}")
-        return spacy.load(lambda_models_path)
-
-    nlp = spacy.load(model_name)
+    cwd = os.getcwd()
+    model_dir = "tmp/models"
+    model_name = "en_core_web_md/en_core_web_md-3.8.0"
+    model_path = os.path.join(cwd, model_dir, model_name)
+    logging.info(f"Loading spacy model from: {model_path}")
+    nlp = spacy.load(model_path)
     logging.info(f"Successfully loaded spacy model: {model_name}")
     return nlp
-    # except OSError:
-    #     logging.warning(f"Spacy model not found. Downloading {model_name}...")
-    #     download(model_name)
-    #     nlp = spacy.load(model_name)
-    #     logging.info(
-    #         f"Successfully downloaded and loaded spacy model: {model_name}")
-    #     return nlp
 
 
 def extract_individuals(data: pd.DataFrame, nlp) -> pd.DataFrame:
