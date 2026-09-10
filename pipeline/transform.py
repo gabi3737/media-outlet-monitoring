@@ -33,6 +33,7 @@ def extract_individuals(data: pd.DataFrame, nlp) -> pd.DataFrame:
     individuals_list = []
     for content in data['content']:
         if isinstance(content, str) and content != 'N/A':
+            content = content.lower()
             doc = nlp(content)
             # Extract PERSON entities
             people = list(
@@ -54,6 +55,7 @@ def extract_companies(data: pd.DataFrame, nlp) -> pd.DataFrame:
     companies_list = []
     for content in data['content']:
         if isinstance(content, str) and content != 'N/A':
+            content = content.lower()
             doc = nlp(content)
             # Extract ORG entities
             companies = list(
