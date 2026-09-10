@@ -1,3 +1,4 @@
+import pandas as pd
 import json
 import os
 import logging
@@ -5,9 +6,9 @@ from dotenv import load_dotenv
 import boto3
 from decimal import Decimal
 from boto3.dynamodb.conditions import Key
-import pandas as pd
 
 load_dotenv()
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
