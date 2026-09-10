@@ -3,19 +3,17 @@ import pandas as pd
 import json
 import os
 import logging
-from dotenv import load_dotenv
 import boto3
 from decimal import Decimal
 from boto3.dynamodb.conditions import Key
 
-load_dotenv()
 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 dynamodb = boto3.resource("dynamodb")
-table = dynamodb.Table(os.environ["TABLE_NAME"])
+table = dynamodb.Table('c25-gabi-db')
 
 # Apparently needed for handling Decimal types in JSON or the whole thing crashes, as
 # DynamoDB uses `Decimal` instead of `float` for numeric values and JSON does not like that.
