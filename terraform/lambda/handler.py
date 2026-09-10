@@ -8,7 +8,6 @@ from decimal import Decimal
 from boto3.dynamodb.conditions import Key
 
 
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
@@ -87,34 +86,34 @@ def get_person(event, data):
     person = event['pathParameters']['person']
     period = event.get('queryStringParameters', {}).get('period')
 
-    return respond(200, data)
+    return respond(200, data.to_dict(orient="records"))
 
 
 def get_company(event, data):
     company = event['pathParameters']['company']
     period = event.get('queryStringParameters', {}).get('period')
 
-    return respond(200, data)
+    return respond(200, data.to_dict(orient="records"))
 
 
 def get_person_sentiment(event, data):
     person = event['pathParameters']['person']
     period = event.get('queryStringParameters', {}).get('period')
 
-    return respond(200, data)
+    return respond(200, data.to_dict(orient="records"))
 
 
 def get_company_sentiment(event, data):
     company = event['pathParameters']['company']
     period = event.get('queryStringParameters', {}).get('period')
 
-    return respond(200, data)
+    return respond(200, data.to_dict(orient="records"))
 
 
 def get_articles(event, data):
     period = event.get('queryStringParameters', {}).get('period')
 
-    return respond(200, data)
+    return respond(200, data.to_dict(orient="records"))
 
 
 def respond(status_code, body):
