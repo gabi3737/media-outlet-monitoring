@@ -10,7 +10,9 @@ import pandas as pd
 from data_functions import (
     get_clean_data,
     get_average_sentiment,
-    get_company_mention_count
+    get_company_mention_count,
+    get_average_sentiment_by_company
+
 )
 
 
@@ -31,6 +33,17 @@ def load_data() -> pd.DataFrame:
 
     # Convert to DataFrame
     return pd.DataFrame(items)
+
+
+def company_chart_by_sentiment(data: pd.DataFrame) -> alt.Chart:
+    """Generate a sentiment chart grouped by company."""
+    return alt.Chart(get_average_sentiment_by_company(data).sort_values(by="sentiment", ascending=False).head(10)).mark_bar().encode(
+        x='companies',
+        y='sentiment',
+        tooltip=['companies', 'sentiment'],
+        color=alt.Color('companies', scale=alt.Scale(
+            scheme='tableau10'), legend=None)
+    )
 
 
 if __name__ == "__main__":
@@ -60,5 +73,10 @@ if __name__ == "__main__":
             "Company Mention Count",
             get_company_mention_count(data)
         )
+
+    st.markdown("## Sentiment Analysis")
+
+    st.markdown("#### Top 10 Companies with Highest Sentiment")
+    st.altair_chart(company_chart_by_sentiment(data), use_container_width=True)
 
     st.dataframe(data)

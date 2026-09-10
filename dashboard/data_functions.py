@@ -39,3 +39,8 @@ def get_average_sentiment(data: pd.DataFrame) -> float:
 def get_company_mention_count(data: pd.DataFrame) -> int:
     """Returns the count of companies mentioned"""
     return data["companies"].explode().nunique()
+
+
+def get_average_sentiment_by_company(data: pd.DataFrame) -> pd.DataFrame:
+    """Returns the average sentiment grouped by company"""
+    return data.explode("companies").groupby("companies")["sentiment"].mean().round(2).reset_index()
