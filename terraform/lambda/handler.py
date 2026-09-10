@@ -1,9 +1,13 @@
 import json
 import os
 import logging
+from dotenv import load_dotenv
 import boto3
 from decimal import Decimal
 from boto3.dynamodb.conditions import Key
+import pandas as pd
+
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
@@ -22,14 +26,15 @@ def decimal_default(obj):
 
 
 def handler(event, context):
+    data = load_data()
     logger.info("Received event: %s", json.dumps(event))
     route = event['routeKey']
     try:
 
         if route == "GET /keywords/{keyword}":
-            return get_keywords(event)
+            return get_keywords(event, data)
         elif route == "GET /articles/{id}":
-            return get_article(event)
+            return get_article(event, data)
         else:
             return {
                 "statusCode": 404,
@@ -42,28 +47,29 @@ def handler(event, context):
         }
 
 
-def get_keywords(event):
-    response = table.query(
-        KeyConditionExpression=Key("tags").eq(
-            event["pathParameters"]["keyword"]),
-        ScanIndexForward=False,
-        Limit=10,
-    )
-    items = response.get("Items", [])
-    return respond(200, items)
+def load_data() -> pd.DataFrame:
+    """Load data from the DynamoDB"""
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('c25-gabi-db')
+
+    response = table.scan()
+    items = response.get('Items', [])
+
+    while 'LastEvaluatedKey' in response:
+        response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+        items.extend(response.get('Items', []))
+
+    return pd.DataFrame(items)
 
 
-def get_article(event):
-    article_id = event["pathParameters"]["id"]
-    response = table.query(
-        KeyConditionExpression=Key("article_id").eq(article_id),
-        ScanIndexForward=False,
-        Limit=1,
-    )
-    items = response.get("Items", [])
-    if not items:
-        return respond(404, {"error": "Article not found."})
-    return respond(200, items[0])
+def get_keywords(event, data):
+
+    return respond(200, data)
+
+
+def get_article(event, data):
+
+    return respond(200, data)
 
 
 def respond(status_code, body):
