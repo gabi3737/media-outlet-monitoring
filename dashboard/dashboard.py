@@ -20,6 +20,8 @@ from data_functions import (
     get_daily_sentiment,
     get_company_wordcloud_data,
     get_individual_wordcloud_data,
+    get_companies_over_time,
+    get_individuals_over_time,
 )
 
 
@@ -205,6 +207,40 @@ def individual_wordcloud_traditional(data: pd.DataFrame):
     return fig
 
 
+def companies_mentions_over_time(data: pd.DataFrame) -> alt.Chart:
+    """Generate a line chart for company mentions over time."""
+    companies_data = get_companies_over_time(data)
+    
+    if companies_data.empty:
+        return None
+    
+    return alt.Chart(companies_data).mark_line().encode(
+        x=alt.X('published', title='Date'),
+        y=alt.Y('count', title='Mentions'),
+        color=alt.Color('companies', scale=alt.Scale(scheme='set2')),
+        tooltip=['companies', 'published', 'count']
+    ).properties(
+        height=400
+    )
+
+
+def individuals_mentions_over_time(data: pd.DataFrame) -> alt.Chart:
+    """Generate a line chart for individual mentions over time."""
+    individuals_data = get_individuals_over_time(data)
+    
+    if individuals_data.empty:
+        return None
+    
+    return alt.Chart(individuals_data).mark_line().encode(
+        x=alt.X('published', title='Date'),
+        y=alt.Y('count', title='Mentions'),
+        color=alt.Color('individuals', scale=alt.Scale(scheme='set3')),
+        tooltip=['individuals', 'published', 'count']
+    ).properties(
+        height=400
+    )
+
+
 if __name__ == "__main__":
 
     # Set up data:
@@ -258,6 +294,16 @@ if __name__ == "__main__":
     individual_wordcloud_fig = individual_wordcloud_traditional(data)
     if individual_wordcloud_fig:
         st.pyplot(individual_wordcloud_fig, use_container_width=True)
+
+    st.markdown("#### Company Mentions Over Time")
+    companies_chart = companies_mentions_over_time(data)
+    if companies_chart:
+        st.altair_chart(companies_chart, use_container_width=True)
+
+    st.markdown("#### Individual Mentions Over Time")
+    individuals_chart = individuals_mentions_over_time(data)
+    if individuals_chart:
+        st.altair_chart(individuals_chart, use_container_width=True)
 
     st.markdown("## Sentiment Analysis")
     col1, col2 = st.columns(2)
