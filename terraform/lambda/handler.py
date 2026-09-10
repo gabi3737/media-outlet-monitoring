@@ -6,6 +6,7 @@ import logging
 import boto3
 from decimal import Decimal
 from boto3.dynamodb.conditions import Key
+from handler_functions import get_individual, get_company_from_db, get_average_sentiment, get_time_period
 
 
 logging.basicConfig(level=logging.INFO)
@@ -83,41 +84,61 @@ def handler(event, context):
 
 
 def get_person(event, data):
+    data = data.copy()
     person = event['pathParameters']['person']
     period = event.get('queryStringParameters', {}).get('period')
+    if period is not None:
+        data = get_time_period(data, int(period))
+    result = get_individual(data, person)
 
-    return respond(200, data.to_dict(orient="records"))
-
+    return respond(200, result)
 
 def get_company(event, data):
+    data = data.copy()
+
     company = event['pathParameters']['company']
     period = event.get('queryStringParameters', {}).get('period')
-
-    return respond(200, data.to_dict(orient="records"))
+    if period is not None:
+        data = get_time_period(data, int(period))
+    result = get_company_from_db(data, company)
+    return respond(200, result)
 
 
 def get_person_sentiment(event, data):
+    data = data.copy()
+
     person = event['pathParameters']['person']
     period = event.get('queryStringParameters', {}).get('period')
-
-    return respond(200, data.to_dict(orient="records"))
+    if period is not None:
+        data = get_time_period(data, int(period))
+    result = get_average_sentiment(data)
+    return respond(200, result)
 
 
 def get_company_sentiment(event, data):
+    data = data.copy()
+
     company = event['pathParameters']['company']
     period = event.get('queryStringParameters', {}).get('period')
-
-    return respond(200, data.to_dict(orient="records"))
+    if period is not None:
+        data = get_time_period(data, int(period))
+    result = get_average_sentiment(data)
+    return respond(200, result)
 
 
 def get_articles(event, data):
+    data = data.copy()
+
     period = event.get('queryStringParameters', {}).get('period')
+    if period is not None:
+        data = get_time_period(data, int(period))
 
-    return respond(200, data.to_dict(orient="records"))
+    return respond(200, data)
 
 
-def respond(status_code, body):
+def respond(status_code: int, body) -> dict:
     return {
         "statusCode": status_code,
+        "headers": {"Content-Type": "application/json"},
         "body": json.dumps(body, default=decimal_default)
     }
