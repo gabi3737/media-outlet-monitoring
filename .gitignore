@@ -110,4 +110,6 @@ pipeline/data/*
 
 pipeline/models/*
 
+pipeline/tmp/*
+
 interview/
