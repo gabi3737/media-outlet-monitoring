@@ -357,9 +357,13 @@ resource "aws_ecs_task_definition" "dashboard" {
   }])
 }
 
+data "aws_ecs_cluster" "c25" {
+  cluster_name = "c25-ecs-cluster"
+}
+
 resource "aws_ecs_service" "c25_gabi_dashboard" {
   name            = "c25-gabi-dashboard"
-  cluster         = "c25-ecs-cluster"
+  cluster         = data.aws_ecs_cluster.c25.id
   task_definition = aws_ecs_task_definition.dashboard.arn
   desired_count   = 1
 
