@@ -88,6 +88,11 @@ def test_get_average_sentiment(valid_dataframe):
     }
 
 
+def test_get_average_sentiment_empty():
+    empty_df = pd.DataFrame({'sentiment': []})
+    assert get_average_sentiment(empty_df) == {'error': 'Empty dataset'}
+
+
 @patch("handler_functions.date")
 def test_get_time_period_valid(mock_date, valid_dataframe):
     mock_date.today.return_value = date(2026, 6, 20)
