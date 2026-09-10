@@ -221,15 +221,33 @@ resource "aws_apigatewayv2_route" "default" {
   target    = "integrations/${aws_apigatewayv2_integration.api_handler.id}"
 }
 
-resource "aws_apigatewayv2_route" "get_article" {
+resource "aws_apigatewayv2_route" "get_person" {
   api_id    = aws_apigatewayv2_api.c25_gabi_api.id
-  route_key = "GET /articles/{id}"
+  route_key = "GET /person/{person}"
   target    = "integrations/${aws_apigatewayv2_integration.api_handler.id}"
 }
 
-resource "aws_apigatewayv2_route" "get_keywords" {
+resource "aws_apigatewayv2_route" "get_company" {
   api_id    = aws_apigatewayv2_api.c25_gabi_api.id
-  route_key = "GET /keywords/{keyword}"
+  route_key = "GET /company/{company}"
+  target    = "integrations/${aws_apigatewayv2_integration.api_handler.id}"
+}
+
+resource "aws_apigatewayv2_route" "get_person_sentiment" {
+  api_id    = aws_apigatewayv2_api.c25_gabi_api.id
+  route_key = "GET /person/{person}/sentiment"
+  target    = "integrations/${aws_apigatewayv2_integration.api_handler.id}"
+}
+
+resource "aws_apigatewayv2_route" "get_company_sentiment" {
+  api_id    = aws_apigatewayv2_api.c25_gabi_api.id
+  route_key = "GET /company/{company}/sentiment"
+  target    = "integrations/${aws_apigatewayv2_integration.api_handler.id}"
+}
+
+resource "aws_apigatewayv2_route" "get_articles" {
+  api_id    = aws_apigatewayv2_api.c25_gabi_api.id
+  route_key = "GET /articles"
   target    = "integrations/${aws_apigatewayv2_integration.api_handler.id}"
 }
 
