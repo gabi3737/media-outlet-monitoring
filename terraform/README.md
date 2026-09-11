@@ -26,7 +26,7 @@ The ECRs containing the Images were created manually in the console.
 
 ### Terraform Root Folder
 
-Intialise Terraform:
+Initialise Terraform:
 
 ``` bash 
 terraform init
