@@ -1,4 +1,2 @@
 boto3
 pandas
-pytest
-pylint

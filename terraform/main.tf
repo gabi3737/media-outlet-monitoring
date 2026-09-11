@@ -172,7 +172,7 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
     Version = "2012-10-17"
     Statement = [{
       Effect   = "Allow"
-      Action   = ["dynamodb:Query", "dynamodb:GetItem"]
+      Action   = ["dynamodb:Query", "dynamodb:GetItem", "dynamodb:Scan"]
       Resource = [
         aws_dynamodb_table.c25_gabi_db.arn,
         "${aws_dynamodb_table.c25_gabi_db.arn}/index/*"
@@ -186,7 +186,7 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
 resource "aws_lambda_function" "api_handler" {
     function_name = "c25_gabi_gateway_function"
     package_type = "Image"
-    image_uri    = "" # Add API gateway lambda image uri here
+    image_uri    = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c25-gabi-api-gateway:latest" # Add API gateway lambda image uri here
     role = aws_iam_role.lambda_exec.arn 
 
     timeout = 20
@@ -221,15 +221,33 @@ resource "aws_apigatewayv2_route" "default" {
   target    = "integrations/${aws_apigatewayv2_integration.api_handler.id}"
 }
 
-resource "aws_apigatewayv2_route" "get_article" {
+resource "aws_apigatewayv2_route" "get_person" {
   api_id    = aws_apigatewayv2_api.c25_gabi_api.id
-  route_key = "GET /articles/{id}"
+  route_key = "GET /person/{person}"
   target    = "integrations/${aws_apigatewayv2_integration.api_handler.id}"
 }
 
-resource "aws_apigatewayv2_route" "get_keywords" {
+resource "aws_apigatewayv2_route" "get_company" {
   api_id    = aws_apigatewayv2_api.c25_gabi_api.id
-  route_key = "GET /keywords/{keyword}"
+  route_key = "GET /company/{company}"
+  target    = "integrations/${aws_apigatewayv2_integration.api_handler.id}"
+}
+
+resource "aws_apigatewayv2_route" "get_person_sentiment" {
+  api_id    = aws_apigatewayv2_api.c25_gabi_api.id
+  route_key = "GET /person/{person}/sentiment"
+  target    = "integrations/${aws_apigatewayv2_integration.api_handler.id}"
+}
+
+resource "aws_apigatewayv2_route" "get_company_sentiment" {
+  api_id    = aws_apigatewayv2_api.c25_gabi_api.id
+  route_key = "GET /company/{company}/sentiment"
+  target    = "integrations/${aws_apigatewayv2_integration.api_handler.id}"
+}
+
+resource "aws_apigatewayv2_route" "get_articles" {
+  api_id    = aws_apigatewayv2_api.c25_gabi_api.id
+  route_key = "GET /articles"
   target    = "integrations/${aws_apigatewayv2_integration.api_handler.id}"
 }
 

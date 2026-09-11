@@ -1,15 +1,20 @@
+import time
+import pandas as pd
 import json
 import os
+from datetime import date, datetime
 import logging
 import boto3
 from decimal import Decimal
 from boto3.dynamodb.conditions import Key
+from handler_functions import get_individual, get_company_from_db, get_average_sentiment, get_time_period
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 dynamodb = boto3.resource("dynamodb")
-table = dynamodb.Table(os.environ["TABLE_NAME"])
+table = dynamodb.Table('c25-gabi-db')
 
 # Apparently needed for handling Decimal types in JSON or the whole thing crashes, as
 # DynamoDB uses `Decimal` instead of `float` for numeric values and JSON does not like that.
@@ -18,18 +23,57 @@ table = dynamodb.Table(os.environ["TABLE_NAME"])
 def decimal_default(obj):
     if isinstance(obj, Decimal):
         return float(obj)
-    raise TypeError
+    if isinstance(obj, (date, datetime, pd.Timestamp)):
+        return obj.isoformat()
+    raise TypeError(f"Type {type(obj)} not serializable")
+
+
+_data_cache = None
+_cache_timestamp = None
+CACHE_TTL_SECONDS = 3600
+
+
+def load_data() -> pd.DataFrame:
+    """Load data from DynamoDB with caching."""
+    global _data_cache, _cache_timestamp
+
+    now = time.time()
+    if _data_cache is not None and _cache_timestamp is not None:
+        if now - _cache_timestamp < CACHE_TTL_SECONDS:
+            logger.info("Using cached data (age: %.0fs).",
+                        now - _cache_timestamp)
+            return _data_cache
+
+    logger.info("Refreshing data from DynamoDB.")
+    response = table.scan()
+    items = response.get('Items', [])
+
+    while 'LastEvaluatedKey' in response:
+        response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+        items.extend(response.get('Items', []))
+
+    _data_cache = pd.DataFrame(items)
+    _cache_timestamp = now
+    return _data_cache
 
 
 def handler(event, context):
+    data = load_data()
     logger.info("Received event: %s", json.dumps(event))
     route = event['routeKey']
     try:
 
-        if route == "GET /keywords/{keyword}":
-            return get_keywords(event)
-        elif route == "GET /articles/{id}":
-            return get_article(event)
+        if route == "GET /person/{person}":
+            return get_person(event, data)
+        elif route == "GET /company/{company}":
+            return get_company(event, data)
+        elif route == "GET /person/{person}/sentiment":
+            return get_person_sentiment(event, data)
+        elif route == "GET /company/{company}/sentiment":
+            return get_company_sentiment(event, data)
+        elif route == "GET /articles":
+            return get_articles(event, data)
+
         else:
             return {
                 "statusCode": 404,
@@ -42,25 +86,64 @@ def handler(event, context):
         }
 
 
-def get_keywords(event):
-    return respond(501, {"error": "GET /keywords/{keyword} is not implemented yet."})
+def get_person(event, data):
+    data = data.copy()
+    person = event['pathParameters']['person']
+    period = event.get('queryStringParameters', {}).get('period')
+    if period is not None:
+        data = get_time_period(data, int(period))
+    result = get_individual(data, person)
+
+    return respond(200, result)
 
 
-def get_article(event):
-    article_id = event["pathParameters"]["id"]
-    response = table.query(
-        KeyConditionExpression=Key("article_id").eq(article_id),
-        ScanIndexForward=False,
-        Limit=1,
-    )
-    items = response.get("Items", [])
-    if not items:
-        return respond(404, {"error": "Article not found."})
-    return respond(200, items[0])
+def get_company(event, data):
+    data = data.copy()
+
+    company = event['pathParameters']['company']
+    period = event.get('queryStringParameters', {}).get('period')
+    if period is not None:
+        data = get_time_period(data, int(period))
+    result = get_company_from_db(data, company)
+    return respond(200, result)
 
 
-def respond(status_code, body):
+def get_person_sentiment(event, data):
+    data = data.copy()
+
+    person = event['pathParameters']['person']
+    period = event.get('queryStringParameters', {}).get('period')
+    if period is not None:
+        data = get_time_period(data, int(period))
+    result = get_average_sentiment(data)
+    return respond(200, result)
+
+
+def get_company_sentiment(event, data):
+    data = data.copy()
+
+    company = event['pathParameters']['company']
+    period = event.get('queryStringParameters', {}).get('period')
+    if period is not None:
+        data = get_time_period(data, int(period))
+    result = get_average_sentiment(data)
+    return respond(200, result)
+
+
+def get_articles(event, data):
+    data = data.copy()
+
+    period = event.get('queryStringParameters', {}).get('period')
+    if period is not None:
+        data = get_time_period(data, int(period))
+
+    data = data.to_dict(orient='records')
+    return respond(200, data)
+
+
+def respond(status_code: int, body) -> dict:
     return {
         "statusCode": status_code,
+        "headers": {"Content-Type": "application/json"},
         "body": json.dumps(body, default=decimal_default)
     }
