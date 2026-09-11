@@ -1,10 +1,15 @@
 # Pipeline Folder Contents
-`requirements.txt` - Contains all required libraries for this folder
-`extract.py` - Extracts and scrapes news articles from RSS feeds
+`requirements.txt` - Contains all required libraries for this folder.
+
+`extract.py` - Extracts and scrapes news articles from RSS feeds.
+
 `transform.py` - Transforms scraped data into a usable format and analyses the data to find insights.
-`load.py` - Loads the scraped data into the Dynamo DB
-`test_.py` - Three separate files containing tests for each phase of the ETL pipeline
-`Dockerfile` - Dockerfile used to take an Image of the pipeline folder
+
+`load.py` - Loads the scraped data into the Dynamo DB.
+
+`test_.py` - Three separate files containing tests for each phase of the ETL pipeline.
+
+`Dockerfile` - Dockerfile used to take an Image of the pipeline folder.
 
 
 ## This pipeline will handle the extraction, transformation, and loading (ETL) to a DynamoDB database of data collected from various media outlets.
