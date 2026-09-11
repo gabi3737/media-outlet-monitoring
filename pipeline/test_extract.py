@@ -120,6 +120,13 @@ def test_scrape_article_content_returns_content(mock_article_cls, mock_sleep):
     assert result == "Some article text"
 
 
+@patch("extract.Article")
+def test_scrape_article_content_invalid(mock_article):
+    mock_article.side_effect = Exception("Failed to download article")
+    result = scrape_article_content("https://www.test.co.uk")
+    assert result == "N/A"
+
+
 def test_clean_html_content_returns_something():
     result = clean_html_content("<p>Hello <b>world</b></p>")
 
