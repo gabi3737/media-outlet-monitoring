@@ -1,10 +1,11 @@
 """Script to orchestrate full pipeline: extract → transform → load to DynamoDB."""
 
 import logging
+import os
+from decimal import Decimal
 import uuid
 import boto3
 import pandas as pd
-from decimal import Decimal
 from extract import extract_all_feeds
 from transform import transform_data
 
@@ -112,7 +113,6 @@ def save_data_locally(data: pd.DataFrame, format='csv') -> None:
         data: DataFrame to save
         format: Output format ('csv' or 'json')
     """
-    import os
     os.makedirs('data', exist_ok=True)
 
     timestamp = pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')
@@ -126,7 +126,11 @@ def save_data_locally(data: pd.DataFrame, format='csv') -> None:
         logging.info(f"✓ Saved {len(data)} articles to {filename}.csv")
 
 
-def run_full_pipeline(use_db=True, extract_only=False, save_local=False, local_format='csv') -> pd.DataFrame:
+def run_full_pipeline(
+        use_db=True,
+        extract_only=False,
+        save_local=False,
+        local_format='csv') -> pd.DataFrame:
     """Run the complete data pipeline: extract → transform → load.
 
     Args:

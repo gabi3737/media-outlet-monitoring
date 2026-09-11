@@ -1,13 +1,17 @@
 import time
-import pandas as pd
 import json
-import os
 from datetime import date, datetime
-import logging
-import boto3
 from decimal import Decimal
+import logging
+import pandas as pd
+import boto3
 from boto3.dynamodb.conditions import Key
-from handler_functions import get_individual, get_company_from_db, get_average_sentiment, get_time_period
+from handler_functions import (
+    get_individual,
+    get_company_from_db,
+    get_average_sentiment,
+    get_time_period
+)
 
 
 logging.basicConfig(level=logging.INFO)
@@ -21,6 +25,7 @@ table = dynamodb.Table('c25-gabi-db')
 
 
 def decimal_default(obj):
+    """Changes the datatype of obj"""
     if isinstance(obj, Decimal):
         return float(obj)
     if isinstance(obj, (date, datetime, pd.Timestamp)):
@@ -58,6 +63,7 @@ def load_data() -> pd.DataFrame:
 
 
 def handler(event, context):
+    """Main lambda function"""
     data = load_data()
     logger.info("Received event: %s", json.dumps(event))
     route = event['routeKey']
@@ -65,20 +71,20 @@ def handler(event, context):
 
         if route == "GET /person/{person}":
             return get_person(event, data)
-        elif route == "GET /company/{company}":
+        if route == "GET /company/{company}":
             return get_company(event, data)
-        elif route == "GET /person/{person}/sentiment":
+        if route == "GET /person/{person}/sentiment":
             return get_person_sentiment(event, data)
-        elif route == "GET /company/{company}/sentiment":
+        if route == "GET /company/{company}/sentiment":
             return get_company_sentiment(event, data)
-        elif route == "GET /articles":
+        if route == "GET /articles":
             return get_articles(event, data)
 
-        else:
-            return {
-                "statusCode": 404,
-                "body": "Route not found"
-            }
+        return {
+            "statusCode": 404,
+            "body": "Route not found"
+        }
+
     except Exception as e:
         return {
             "statusCode": 500,
@@ -87,6 +93,7 @@ def handler(event, context):
 
 
 def get_person(event, data):
+    """Gets person data"""
     data = data.copy()
     person = event['pathParameters']['person']
     period = event.get('queryStringParameters', {}).get('period')
@@ -98,6 +105,7 @@ def get_person(event, data):
 
 
 def get_company(event, data):
+    """Gets company data"""
     data = data.copy()
 
     company = event['pathParameters']['company']
@@ -109,6 +117,7 @@ def get_company(event, data):
 
 
 def get_person_sentiment(event, data):
+    """Gets average sentiment of individual"""
     data = data.copy()
 
     person = event['pathParameters']['person']
@@ -120,6 +129,7 @@ def get_person_sentiment(event, data):
 
 
 def get_company_sentiment(event, data):
+    """Gets average sentiment of company"""
     data = data.copy()
 
     company = event['pathParameters']['company']
@@ -131,6 +141,7 @@ def get_company_sentiment(event, data):
 
 
 def get_articles(event, data):
+    """Gets articles"""
     data = data.copy()
 
     period = event.get('queryStringParameters', {}).get('period')
@@ -142,6 +153,7 @@ def get_articles(event, data):
 
 
 def respond(status_code: int, body) -> dict:
+    """Returns a formatted response for lambda function"""
     return {
         "statusCode": status_code,
         "headers": {"Content-Type": "application/json"},

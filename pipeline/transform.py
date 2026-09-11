@@ -26,7 +26,10 @@ def load_spacy_model():
     return nlp
 
 
-def extract_spacy_entities(data: pd.DataFrame, nlp, entity_label: str, column_name: str) -> pd.DataFrame:
+def extract_spacy_entities(
+        data: pd.DataFrame,
+        nlp, entity_label: str,
+        column_name: str) -> pd.DataFrame:
     """Extract entities of a specific type from article content using spacy NER.
 
     Args:
