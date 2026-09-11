@@ -175,25 +175,77 @@ def top_ten_companies_daily_sentiment(data: pd.DataFrame) -> alt.Chart:
     )
 
 
+def sentiment_to_color(sentiment, min_sentiment=None, max_sentiment=None):
+    """Convert sentiment value to a color based on relative position in range.
+
+    Args:
+        sentiment: Value between -1 (negative) and 1 (positive)
+        min_sentiment: Minimum sentiment value in the dataset (for normalization)
+        max_sentiment: Maximum sentiment value in the dataset (for normalization)
+
+    Returns:
+        Color string: red for negative, yellow for neutral, green for positive
+    """
+    # If we have min/max, normalize to that range
+    if min_sentiment is not None and max_sentiment is not None:
+        if max_sentiment != min_sentiment:
+            normalized = (sentiment - min_sentiment) / \
+                (max_sentiment - min_sentiment)
+        else:
+            normalized = 0.5
+    else:
+        # Otherwise normalize to standard -1 to 1 range
+        normalized = (sentiment + 1) / 2
+
+    # Clamp to 0-1
+    normalized = max(0, min(1, normalized))
+
+    # Use color spectrum: red (0) -> yellow (0.5) -> green (1)
+    if normalized < 0.25:
+        return "#d7191c"  # Dark red
+    elif normalized < 0.4:
+        return "#fdae61"  # Orange
+    elif normalized < 0.6:
+        return "#ffffbf"  # Yellow
+    elif normalized < 0.75:
+        return "#a6d96a"  # Light green
+    else:
+        return "#1a9641"  # Dark green
+
+
 def company_wordcloud_traditional(data: pd.DataFrame):
-    """Generate a traditional wordcloud for company mentions using wordcloud library."""
+    """Generate a wordcloud for company mentions colored by sentiment."""
     company_data = get_company_wordcloud_data(data)
 
     if company_data.empty:
         st.write("No data available for wordcloud")
         return
 
+    # Get sentiment for each company
+    sentiment_df = get_average_sentiment_by_company(data)
+    sentiment_by_company = sentiment_df.set_index(
+        'companies')['sentiment'].to_dict()
+
+    # Calculate min/max for normalization
+    min_sent = sentiment_df['sentiment'].min()
+    max_sent = sentiment_df['sentiment'].max()
+
     # Create a dictionary of company: count
     word_freq = dict(zip(company_data['companies'], company_data['count']))
 
-    # Generate wordcloud
+    # Create color function that uses sentiment with dynamic normalization
+    def color_func(word, **kwargs):
+        sentiment = sentiment_by_company.get(word, 0)
+        return sentiment_to_color(sentiment, min_sent, max_sent)
+
+    # Generate wordcloud with sentiment-based coloring
     wordcloud = WordCloud(
         width=1200,
         height=400,
         background_color='black',
-        colormap='Greens',
         relative_scaling=0.5,
-        min_font_size=10
+        min_font_size=10,
+        color_func=color_func
     ).generate_from_frequencies(word_freq)
 
     # Display using matplotlib
@@ -204,25 +256,39 @@ def company_wordcloud_traditional(data: pd.DataFrame):
 
 
 def individual_wordcloud_traditional(data: pd.DataFrame):
-    """Generate a traditional wordcloud for individuals using wordcloud library."""
+    """Generate a wordcloud for individuals colored by sentiment."""
     individual_data = get_individual_wordcloud_data(data)
 
     if individual_data.empty:
         st.write("No data available for wordcloud")
         return
 
+    # Get sentiment for each individual
+    sentiment_data = data.explode('individuals').dropna(subset=['individuals'])
+    sentiment_by_individual = sentiment_data.groupby(
+        'individuals')['sentiment'].mean().to_dict()
+
+    # Calculate min/max for normalization
+    min_sent = min(sentiment_by_individual.values())
+    max_sent = max(sentiment_by_individual.values())
+
     # Create a dictionary of individual: count
     word_freq = dict(
         zip(individual_data['individuals'], individual_data['count']))
 
-    # Generate wordcloud
+    # Create color function that uses sentiment with dynamic normalization
+    def color_func(word, **kwargs):
+        sentiment = sentiment_by_individual.get(word, 0)
+        return sentiment_to_color(sentiment, min_sent, max_sent)
+
+    # Generate wordcloud with sentiment-based coloring
     wordcloud = WordCloud(
         width=1200,
         height=400,
         background_color='black',
-        colormap='Purples',
         relative_scaling=0.5,
-        min_font_size=10
+        min_font_size=10,
+        color_func=color_func
     ).generate_from_frequencies(word_freq)
 
     # Display using matplotlib
@@ -346,13 +412,13 @@ if __name__ == "__main__":
         "Entity frequency analysis from extracted named entities in article content.")
 
     with st.expander("🏢 Top Companies", expanded=True):
-        st.write("**Size represents mention frequency** — Larger company names appear more frequently in articles. Extracted using spaCy named entity recognition (ORG label).")
+        st.write("**Size represents mention frequency** — Larger company names appear more frequently in articles. **Color represents sentiment:** red = negative, yellow = neutral, green = positive (based on average sentiment of articles mentioning each company). Extracted using spaCy named entity recognition (ORG label).")
         wordcloud_fig = company_wordcloud_traditional(data)
         if wordcloud_fig:
             st.pyplot(wordcloud_fig, use_container_width=True)
 
     with st.expander("👤 Top Individuals", expanded=True):
-        st.write("**Size represents mention frequency** — Larger individual names appear more frequently in articles. Extracted using spaCy named entity recognition (PERSON label).")
+        st.write("**Size represents mention frequency** — Larger individual names appear more frequently in articles. **Color represents sentiment:** red = negative, yellow = neutral, green = positive (based on average sentiment of articles mentioning each individual). Extracted using spaCy named entity recognition (PERSON label).")
         individual_wordcloud_fig = individual_wordcloud_traditional(data)
         if individual_wordcloud_fig:
             st.pyplot(individual_wordcloud_fig, use_container_width=True)
