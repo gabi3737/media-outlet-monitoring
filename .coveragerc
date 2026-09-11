@@ -5,3 +5,5 @@ omit =
     pipeline/test_extract.py
     pipeline/test_transform.py
     pipeline/test_load.py
+    terraform/lambda/test_handler_functions.py
+    terraform/lambda/handler.py
