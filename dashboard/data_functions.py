@@ -188,3 +188,104 @@ def get_individuals_over_time(data: pd.DataFrame) -> pd.DataFrame:
         'daily_count'].cumsum()
 
     return individuals_time[['published', 'individuals', 'count']]
+
+
+def get_trending_companies_with_sentiment(data: pd.DataFrame, days: int = 7) -> pd.DataFrame:
+    """Returns trending companies (count > 1) in last N days with average sentiment"""
+    if data.empty:
+        return pd.DataFrame(columns=['companies', 'count', 'sentiment'])
+
+    # Filter for last N days
+    cutoff_date = data['published'].max() - pd.Timedelta(days=days)
+    recent_data = data[data['published'] >= cutoff_date]
+
+    if recent_data.empty:
+        return pd.DataFrame(columns=['companies', 'count', 'sentiment'])
+
+    # Explode companies and get count and average sentiment
+    companies_exploded = recent_data.explode("companies").dropna(
+        subset=['companies']).query("companies != ''")
+
+    company_data = companies_exploded.groupby('companies').agg(
+        count=('companies', 'size'),
+        sentiment=('sentiment', 'mean')
+    ).reset_index()
+
+    # Filter for count > 1
+    return company_data[company_data['count'] > 1].sort_values(by='count', ascending=False)
+
+
+def get_trending_individuals_with_sentiment(data: pd.DataFrame, days: int = 7) -> pd.DataFrame:
+    """Returns trending individuals (count > 1) in last N days with average sentiment"""
+    if data.empty:
+        return pd.DataFrame(columns=['individuals', 'count', 'sentiment'])
+
+    # Filter for last N days
+    cutoff_date = data['published'].max() - pd.Timedelta(days=days)
+    recent_data = data[data['published'] >= cutoff_date]
+
+    if recent_data.empty:
+        return pd.DataFrame(columns=['individuals', 'count', 'sentiment'])
+
+    # Explode individuals and get count and average sentiment
+    individuals_exploded = recent_data.explode("individuals").dropna(
+        subset=['individuals']).query("individuals != ''")
+
+    individual_data = individuals_exploded.groupby('individuals').agg(
+        count=('individuals', 'size'),
+        sentiment=('sentiment', 'mean')
+    ).reset_index()
+
+    # Filter for count > 1
+    return individual_data[individual_data['count'] > 1].sort_values(by='count', ascending=False)
+
+
+def get_trending_companies(data: pd.DataFrame, days: int = 7) -> pd.DataFrame:
+    """Returns trending companies (count > 1) in the last N days"""
+    if data.empty:
+        return pd.DataFrame(columns=['companies', 'count'])
+
+    # Filter for last N days
+    cutoff_date = data['published'].max() - pd.Timedelta(days=days)
+    recent_data = data[data['published'] >= cutoff_date]
+
+    if recent_data.empty:
+        return pd.DataFrame(columns=['companies', 'count'])
+
+    # Count companies and filter for count > 1
+    company_counts = (
+        recent_data.explode("companies")
+        .dropna(subset=['companies'])
+        .query("companies != ''")
+        .groupby("companies")
+        .size()
+        .reset_index(name='count')
+    )
+
+    # Filter for count > 1
+    return company_counts[company_counts['count'] > 1].sort_values(by='count', ascending=False)
+
+
+def get_trending_individuals(data: pd.DataFrame, days: int = 7) -> pd.DataFrame:
+    """Returns trending individuals (count > 1) in the last N days"""
+    if data.empty:
+        return pd.DataFrame(columns=['individuals', 'count'])
+
+    # Filter for last N days
+    cutoff_date = data['published'].max() - pd.Timedelta(days=days)
+    recent_data = data[data['published'] >= cutoff_date]
+
+    if recent_data.empty:
+        return pd.DataFrame(columns=['individuals', 'count'])
+
+    # Count individuals and filter for count > 1
+    individual_counts = (
+        recent_data.explode("individuals")
+        .dropna(subset=['individuals'])
+        .query("individuals != ''")
+        .groupby("individuals")
+        .size()
+        .reset_index(name="count")
+    )
+
+    return individual_counts[individual_counts['count'] > 1].sort_values(by="count", ascending=False)
