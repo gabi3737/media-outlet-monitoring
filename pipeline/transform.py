@@ -26,48 +26,47 @@ def load_spacy_model():
     return nlp
 
 
-def extract_individuals(data: pd.DataFrame, nlp) -> pd.DataFrame:
-    """Extract people entities from article content using spacy NER."""
-    logging.info("Extracting individuals from content")
+def extract_spacy_entities(data: pd.DataFrame, nlp, entity_label: str, column_name: str) -> pd.DataFrame:
+    """Extract entities of a specific type from article content using spacy NER.
 
-    individuals_list = []
+    Args:
+        data: Input DataFrame with 'content' column
+        nlp: Spacy model with NER pipeline
+        entity_label: Spacy entity label to extract (e.g., "PERSON", "ORG")
+        column_name: Name of the output column to create
+
+    Returns:
+        pd.DataFrame: DataFrame with new column containing extracted entities
+    """
+    logging.info(
+        f"Extracting {entity_label} entities to column '{column_name}'")
+
+    entities_list = []
     for content in data['content']:
         if isinstance(content, str) and content != 'N/A':
             content = content.lower()
             doc = nlp(content)
-            # Extract PERSON entities
-            people = list(
-                set([ent.text for ent in doc.ents if ent.label_ == "PERSON"]))
-            individuals_list.append(', '.join(people) if people else 'N/A')
+            # Extract entities of the specified type
+            entities = list(
+                set([ent.text for ent in doc.ents if ent.label_ == entity_label]))
+            entities_list.append(', '.join(entities) if entities else 'N/A')
         else:
-            individuals_list.append('N/A')
+            entities_list.append('N/A')
 
-    data['individuals'] = individuals_list
+    data[column_name] = entities_list
     logging.info(
-        f"Successfully extracted individuals for {len(data)} articles")
+        f"Successfully extracted {entity_label} entities for {len(data)} articles")
     return data
+
+
+def extract_individuals(data: pd.DataFrame, nlp) -> pd.DataFrame:
+    """Extract people entities from article content using spacy NER."""
+    return extract_spacy_entities(data, nlp, "PERSON", "individuals")
 
 
 def extract_companies(data: pd.DataFrame, nlp) -> pd.DataFrame:
     """Extract company entities from article content using spacy NER."""
-    logging.info("Extracting companies from content")
-
-    companies_list = []
-    for content in data['content']:
-        if isinstance(content, str) and content != 'N/A':
-            content = content.lower()
-            doc = nlp(content)
-            # Extract ORG entities
-            companies = list(
-                set([ent.text for ent in doc.ents if ent.label_ == "ORG"]))
-            companies_list.append(', '.join(companies) if companies else 'N/A')
-        else:
-            companies_list.append('N/A')
-
-    data['companies'] = companies_list
-    logging.info(
-        f"Successfully extracted companies for {len(data)} articles")
-    return data
+    return extract_spacy_entities(data, nlp, "ORG", "companies")
 
 
 def clean_publication_time(data: pd.DataFrame) -> pd.DataFrame:
