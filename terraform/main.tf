@@ -356,7 +356,7 @@ resource "aws_ecs_task_definition" "dashboard" {
 
   container_definitions = jsonencode([{
     name      = "dashboard"
-    image     = "" # ADD IMAGE HERE
+    image     = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c25-gabi-dashboard:latest" # ADD IMAGE HERE
     essential = true
     portMappings = [{
       containerPort = 8501
