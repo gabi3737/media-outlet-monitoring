@@ -35,5 +35,5 @@ def get_time_period(data: pd.DataFrame, num_days: int) -> dict:
     data['date'] = data['published'].dt.date
     filter_date = date.today() - timedelta(days=num_days)
     data = data[data['date'].apply(lambda x: x >= filter_date)]
-    data.drop('date', axis='columns')
+    data = data.drop('date', axis='columns')
     return data.to_dict()
