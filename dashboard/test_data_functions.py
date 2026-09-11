@@ -134,7 +134,7 @@ def test_get_company_wordcloud_data_empty(sample_data):
         'companies': (),
         'count': []
     })
-assert empty.empty and empty.columns.tolist() == expected_empty.columns.tolist()
+    assert empty.empty and empty.columns.tolist() == expected_empty.columns.tolist()
 
 
 def test_get_individual_wordcloud_data(sample_data):
