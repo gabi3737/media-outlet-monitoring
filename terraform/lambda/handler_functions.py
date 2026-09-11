@@ -7,6 +7,9 @@ from datetime import date, timedelta
 
 def get_clean_data(data: pd.DataFrame) -> pd.DataFrame:
     """Returns a cleaned dataframe"""
+    if data.empty:
+        return data
+
     data['published'] = pd.to_datetime(data['published'], errors='coerce')
     data['date'] = data['published'].dt.date
 
