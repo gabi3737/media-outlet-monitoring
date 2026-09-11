@@ -21,6 +21,18 @@ The ECRs containing the Images were created manually in the console.
 
 # Instructions
 
+## To create all the resources for the project:
+
+
+### Terraform Root Folder
+
+- `terraform init` (if it is your first time in the folder)
+- `terraform apply`
+
+To remove the resources:
+- `terraform destroy`
+
+
 ## To reset the API Gateway Lambda after adding new code to the `handler.py` or `handler_functions.py` run:
 
 ### `lambda/` Folder
@@ -37,15 +49,7 @@ To build and push the Docker Image to the ECR:
 - `terraform apply -replace=aws_lambda_function.api_handler` to reset the Lambda to use the newly pushed Image.       
 - `terraform apply` as resetting the Lambda removes the `lambda_permissions` resource block and it needs to be reapplied.
 
-## To create all the resources for the project:
 
-### Terraform Root Folder
-
-- `terraform init` (if it is your first time in the folder)
-- `terraform apply`
-
-To remove the resources:
-- `terraform destroy`
 
 
 
