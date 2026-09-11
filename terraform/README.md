@@ -26,12 +26,22 @@ The ECRs containing the Images were created manually in the console.
 
 ### Terraform Root Folder
 
-- `terraform init` (if it is your first time in the folder)
-- `terraform apply`
+Intialise Terraform:
 
-To remove the resources:
-- `terraform destroy`
+``` bash 
+terraform init
+``` 
 
+Deploy Resources on AWS:
+
+``` bash
+terraform apply
+```
+
+Remove all resources from AWS:
+```bash
+terraform destroy
+```
 
 ## To reset the API Gateway Lambda after adding new code to the `handler.py` or `handler_functions.py` run:
 
@@ -39,16 +49,37 @@ To remove the resources:
 
 To build and push the Docker Image to the ECR:
 - Authenticate your Docker client and AWS CLI to your registry. 
-- Run `docker build --platform linux/amd64 --provenance=false --sbom=false -t c25-gabi-api-gateway .` to build the Image.
-- Run `docker tag c25-gabi-api-gateway:latest 129033205317.dkr.ecr.eu-west-2.amazonaws.com/c25-gabi-api-gateway:latest` to tag the Image to be pushed.
-- Run `docker push 129033205317.dkr.ecr.eu-west-2.amazonaws.com/c25-gabi-api-gateway:latest` to push the Image to the ECR.
+
+Build the Image:
+
+``` bash
+docker build --platform linux/amd64 --provenance=false --sbom=false -t c25-gabi-api-gateway .
+```
+
+Tag the Image:
+
+``` bash
+docker tag c25-gabi-api-gateway:latest 129033205317.dkr.ecr.eu-west-2.amazonaws.com/c25-gabi-api-gateway:latest
+```
+
+Push the Image:
+
+``` bash
+docker push 129033205317.dkr.ecr.eu-west-2.amazonaws.com/c25-gabi-api-gateway:latest
+```
 
 ### Terraform Root Folder
 
-- `terraform init` (if it is your first time in the folder)
-- `terraform apply -replace=aws_lambda_function.api_handler` to reset the Lambda to use the newly pushed Image.       
-- `terraform apply` as resetting the Lambda removes the `lambda_permissions` resource block and it needs to be reapplied.
+Reset the Lambda to use the newly pushed Image:
 
+``` bash
+terraform apply -replace=aws_lambda_function.api_handler
+```
+Reapply the `lambda_permissions` resource block:
+
+```bash
+terraform apply
+```
 
 
 
