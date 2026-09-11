@@ -22,6 +22,8 @@ from data_functions import (
     get_individual_wordcloud_data,
     get_companies_over_time,
     get_individuals_over_time,
+    get_trending_companies_with_sentiment,
+    get_trending_individuals_with_sentiment,
 )
 
 
@@ -118,7 +120,7 @@ def sentiment_filter() -> tuple:
 def company_chart_by_sentiment(data: pd.DataFrame) -> alt.Chart:
     """Generate a bar chart for top ten companies with greatest sentiment."""
     return alt.Chart(get_average_sentiment_by_company(data).head(10)).mark_bar().encode(
-        x=alt.X('companies', title='Company'),
+        x=alt.X('companies', title='Company', sort='-y'),
         y=alt.Y('sentiment', title='Average Sentiment'),
         tooltip=['companies', 'sentiment'],
         color=alt.Color('companies', scale=alt.Scale(
@@ -129,7 +131,7 @@ def company_chart_by_sentiment(data: pd.DataFrame) -> alt.Chart:
 def sentiment_chart_by_company(data: pd.DataFrame) -> alt.Chart:
     """Generate a bar chart for top ten companies by sentiment"""
     return alt.Chart(get_average_sentiment_for_top_companies(data).head(10)).mark_bar().encode(
-        x=alt.X('companies', title='Company'),
+        x=alt.X('companies', title='Company', sort='-y'),
         y=alt.Y('mean_sentiment', title='Average Sentiment'),
         tooltip=['companies', 'mean_sentiment', 'count'],
         color=alt.Color('companies', scale=alt.Scale(
@@ -208,36 +210,38 @@ def individual_wordcloud_traditional(data: pd.DataFrame):
 
 
 def companies_mentions_over_time(data: pd.DataFrame) -> alt.Chart:
-    """Generate a line chart for company mentions over time."""
-    companies_data = get_companies_over_time(data)
+    """Generate a scatter plot for trending companies with sentiment vs mention count."""
+    companies_data = get_trending_companies_with_sentiment(data, days=7)
 
     if companies_data.empty:
         return None
 
-    return alt.Chart(companies_data).mark_line().encode(
-        x=alt.X('published', title='Date'),
-        y=alt.Y('count', title='Mentions'),
-        color=alt.Color('companies', scale=alt.Scale(scheme='set2')),
-        tooltip=['companies', 'published', 'count']
+    return alt.Chart(companies_data).mark_circle(size=200).encode(
+        x=alt.X('count', title='Mentions (Last 7 Days)'),
+        y=alt.Y('sentiment', title='Average Sentiment'),
+        tooltip=['companies', 'count', 'sentiment'],
+        color=alt.Color('sentiment', scale=alt.Scale(scheme='redyellowgreen'))
     ).properties(
-        height=400
+        height=400,
+        width=600
     )
 
 
 def individuals_mentions_over_time(data: pd.DataFrame) -> alt.Chart:
-    """Generate a line chart for individual mentions over time."""
-    individuals_data = get_individuals_over_time(data)
+    """Generate a scatter plot for trending individuals with sentiment vs mention count."""
+    individuals_data = get_trending_individuals_with_sentiment(data, days=7)
 
     if individuals_data.empty:
         return None
 
-    return alt.Chart(individuals_data).mark_line().encode(
-        x=alt.X('published', title='Date'),
-        y=alt.Y('count', title='Mentions'),
-        color=alt.Color('individuals', scale=alt.Scale(scheme='set3')),
-        tooltip=['individuals', 'published', 'count']
+    return alt.Chart(individuals_data).mark_circle(size=200).encode(
+        x=alt.X('count', title='Mentions (Last 7 Days)'),
+        y=alt.Y('sentiment', title='Average Sentiment'),
+        tooltip=['individuals', 'count', 'sentiment'],
+        color=alt.Color('sentiment', scale=alt.Scale(scheme='redyellowgreen'))
     ).properties(
-        height=400
+        height=400,
+        width=600
     )
 
 
@@ -295,12 +299,12 @@ if __name__ == "__main__":
     if individual_wordcloud_fig:
         st.pyplot(individual_wordcloud_fig, use_container_width=True)
 
-    st.markdown("#### Company Mentions Over Time")
+    st.markdown("#### Trending Companies (Last 7 Days, Count > 2)")
     companies_chart = companies_mentions_over_time(data)
     if companies_chart:
         st.altair_chart(companies_chart, use_container_width=True)
 
-    st.markdown("#### Individual Mentions Over Time")
+    st.markdown("#### Trending Individuals (Last 7 Days, Count > 2)")
     individuals_chart = individuals_mentions_over_time(data)
     if individuals_chart:
         st.altair_chart(individuals_chart, use_container_width=True)
