@@ -54,6 +54,21 @@ jobs:
                   -v \
                   pipeline/
 
+            - name: Install terraform lambda dependencies
+              run: |
+                pip install -r terraform/lambda/requirements.txt
+                pip install pytest pytest-cov pylint
+
+            - name: Test terraform handler
+              run: |
+                pytest \
+                  --cov=terraform/lambda/ \
+                  --cov-report=term-missing \
+                  --cov-report=xml \
+                  --cov-fail-under=50 \
+                  -v \
+                  terraform/lambda/
+
             - name: Lint dashboard
               run: |
                 pylint \
@@ -67,3 +82,10 @@ jobs:
                   --recursive=y \
                   --fail-under=6 \
                   pipeline/
+            
+            - name: Lint terraform lambda
+              run: |
+                pylint \
+                  --recursive=y \
+                  --fail-under=6 \
+                  terraform/lambda/
