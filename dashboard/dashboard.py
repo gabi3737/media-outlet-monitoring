@@ -50,7 +50,7 @@ def load_data() -> pd.DataFrame:
 def company_filter() -> list[str]:
     """Returns a list of filtered companies"""
     companies = data["companies"].explode().dropna().unique()
-    selected_companies = st.sidebar.multiselect(
+    selected_companies = st.multiselect(
         "Companies:",
         companies,
         default=companies,
@@ -62,7 +62,7 @@ def company_filter() -> list[str]:
 def individual_filter() -> list[str]:
     """Returns a list of filtered individuals"""
     individuals = data["individuals"].explode().dropna().unique()
-    selected_individuals = st.sidebar.multiselect(
+    selected_individuals = st.multiselect(
         "Individuals:",
         individuals,
         default=individuals,
@@ -74,7 +74,7 @@ def individual_filter() -> list[str]:
 def authors_filter() -> list[str]:
     """Returns a list of filtered authors"""
     authors = data["author"].explode().dropna().unique()
-    selected_authors = st.sidebar.multiselect(
+    selected_authors = st.multiselect(
         "Authors:",
         authors,
         default=authors,
@@ -86,7 +86,7 @@ def authors_filter() -> list[str]:
 def keyword_filter() -> list[str]:
     """Returns a list of filtered key words"""
     keywords = data["tags"].explode().dropna().unique()
-    selected_tags = st.sidebar.multiselect(
+    selected_tags = st.multiselect(
         "Key Words:",
         keywords,
         default=keywords,
@@ -97,7 +97,7 @@ def keyword_filter() -> list[str]:
 
 def date_filter() -> tuple:
     """Returns a tuple with start and end date"""
-    date_range = st.date_input(
+    date_range = st.sidebar.date_input(
         "Select the date range:",
         (date(2026, 1, 1), date.today()),
         date(2026, 1, 1),
@@ -109,8 +109,8 @@ def date_filter() -> tuple:
 
 def sentiment_filter() -> tuple:
     """Returns a tuple with the min and max sentiment values"""
-    sentiment_range = st.slider(
-        "Select the sentiment range:",
+    sentiment_range = st.sidebar.slider(
+        "Select the sentiment range, where -1 is very negative and 1 is very positive:",
         min_value=-1.0,
         max_value=1.0,
         value=[-1.0, 1.0]
@@ -118,12 +118,27 @@ def sentiment_filter() -> tuple:
     return sentiment_range
 
 
+def format_sentiment(value: float) -> str:
+    """Convert sentiment value (-1 to 1) to percentage format (+/-X%)"""
+    if pd.isna(value):
+        return "N/A"
+    percentage = int(value * 100)
+    if percentage >= 0:
+        return f"+{percentage}%"
+    else:
+        return f"{percentage}%"
+
+
 def company_chart_by_sentiment(data: pd.DataFrame) -> alt.Chart:
     """Generate a bar chart for top ten companies with greatest sentiment."""
-    return alt.Chart(get_average_sentiment_by_company(data).head(10)).mark_bar().encode(
+    chart_data = get_average_sentiment_by_company(data).head(10).copy()
+    chart_data['sentiment_pct'] = chart_data['sentiment'].apply(
+        format_sentiment)
+    return alt.Chart(chart_data).mark_bar().encode(
         x=alt.X('companies', title='Company', sort='-y'),
-        y=alt.Y('sentiment', title='Average Sentiment'),
-        tooltip=['companies', 'sentiment'],
+        y=alt.Y('sentiment', title='Average Sentiment',
+                axis=alt.Axis(format='.0%')),
+        tooltip=['companies', 'sentiment_pct'],
         color=alt.Color('companies', scale=alt.Scale(
             scheme='tableau10'), legend=None)
     )
@@ -131,10 +146,14 @@ def company_chart_by_sentiment(data: pd.DataFrame) -> alt.Chart:
 
 def sentiment_chart_by_company(data: pd.DataFrame) -> alt.Chart:
     """Generate a bar chart for top ten companies by sentiment"""
-    return alt.Chart(get_average_sentiment_for_top_companies(data).head(10)).mark_bar().encode(
+    chart_data = get_average_sentiment_for_top_companies(data).head(10).copy()
+    chart_data['mean_sentiment_pct'] = chart_data['mean_sentiment'].apply(
+        format_sentiment)
+    return alt.Chart(chart_data).mark_bar().encode(
         x=alt.X('companies', title='Company', sort='-y'),
-        y=alt.Y('mean_sentiment', title='Average Sentiment'),
-        tooltip=['companies', 'mean_sentiment', 'count'],
+        y=alt.Y('mean_sentiment', title='Average Sentiment',
+                axis=alt.Axis(format='.0%')),
+        tooltip=['companies', 'mean_sentiment_pct', 'count'],
         color=alt.Color('companies', scale=alt.Scale(
             scheme='tableau10'), legend=None)
     )
@@ -144,12 +163,15 @@ def top_ten_companies_daily_sentiment(data: pd.DataFrame) -> alt.Chart:
     """Generate a line chart for top ten companies' daily sentiment."""
     top_companies = get_average_sentiment_for_top_companies(data).head(10)[
         'companies']
-    daily_sentiment = get_daily_sentiment(data, top_companies)
+    daily_sentiment = get_daily_sentiment(data, top_companies).copy()
+    daily_sentiment['sentiment_pct'] = daily_sentiment['sentiment'].apply(
+        format_sentiment)
     return alt.Chart(daily_sentiment).mark_line().encode(
         x=alt.X('published', title='Date'),
-        y=alt.Y('sentiment', title='Average Sentiment'),
+        y=alt.Y('sentiment', title='Average Sentiment',
+                axis=alt.Axis(format='.0%')),
         color=alt.Color('companies', scale=alt.Scale(scheme='tableau10')),
-        tooltip=['companies', 'published', 'sentiment']
+        tooltip=['companies', 'published', 'sentiment_pct']
     )
 
 
@@ -212,15 +234,19 @@ def individual_wordcloud_traditional(data: pd.DataFrame):
 
 def companies_mentions_over_time(data: pd.DataFrame) -> alt.Chart:
     """Generate a scatter plot for trending companies with sentiment vs mention count."""
-    companies_data = get_trending_companies_with_sentiment(data, days=7)
+    companies_data = get_trending_companies_with_sentiment(data, days=7).copy()
 
     if companies_data.empty:
         return None
 
+    companies_data['sentiment_pct'] = companies_data['sentiment'].apply(
+        format_sentiment)
     return alt.Chart(companies_data).mark_circle(size=200).encode(
-        x=alt.X('count', title='Mentions (Last 7 Days)'),
-        y=alt.Y('sentiment', title='Average Sentiment'),
-        tooltip=['companies', 'count', 'sentiment'],
+        x=alt.X('count', title='Mentions (Last 7 Days)',
+                axis=alt.Axis(format='d')),
+        y=alt.Y('sentiment', title='Average Sentiment',
+                axis=alt.Axis(format='.0%')),
+        tooltip=['companies', 'count', 'sentiment_pct'],
         color=alt.Color('sentiment', scale=alt.Scale(scheme='redyellowgreen'))
     ).properties(
         height=400,
@@ -230,15 +256,20 @@ def companies_mentions_over_time(data: pd.DataFrame) -> alt.Chart:
 
 def individuals_mentions_over_time(data: pd.DataFrame) -> alt.Chart:
     """Generate a scatter plot for trending individuals with sentiment vs mention count."""
-    individuals_data = get_trending_individuals_with_sentiment(data, days=7)
+    individuals_data = get_trending_individuals_with_sentiment(
+        data, days=7).copy()
 
     if individuals_data.empty:
         return None
 
+    individuals_data['sentiment_pct'] = individuals_data['sentiment'].apply(
+        format_sentiment)
     return alt.Chart(individuals_data).mark_circle(size=200).encode(
-        x=alt.X('count', title='Mentions (Last 7 Days)'),
-        y=alt.Y('sentiment', title='Average Sentiment'),
-        tooltip=['individuals', 'count', 'sentiment'],
+        x=alt.X('count', title='Mentions (Last 7 Days)',
+                axis=alt.Axis(format='d')),
+        y=alt.Y('sentiment', title='Average Sentiment',
+                axis=alt.Axis(format='.0%')),
+        tooltip=['individuals', 'count', 'sentiment_pct'],
         color=alt.Color('sentiment', scale=alt.Scale(scheme='redyellowgreen'))
     ).properties(
         height=400,
@@ -258,12 +289,17 @@ if __name__ == "__main__":
     # Side Bar
     with st.sidebar:
         st.markdown("## Filters")
-        selected_companies = company_filter()
-        selected_individuals = individual_filter()
-        selected_authors = authors_filter()
-        selected_tags = keyword_filter()
+
+        # Main filters (always visible)
         date_range = date_filter()
         sentiment_range = sentiment_filter()
+
+        # Entity filters (in expander)
+        with st.expander("📊 Entity Filters (Companies, Individuals, Authors, Keywords)", expanded=False):
+            selected_companies = company_filter()
+            selected_individuals = individual_filter()
+            selected_authors = authors_filter()
+            selected_tags = keyword_filter()
 
         st.markdown("---")
         exclude_misidentified = st.checkbox(
@@ -295,12 +331,12 @@ if __name__ == "__main__":
         avg_sentiment = get_average_sentiment(data)
         st.metric(
             "Average Sentiment",
-            f"{avg_sentiment:.2f}",
-            help="Average sentiment score across all articles (-1.0 = negative, 1.0 = positive). Calculated using TextBlob polarity analysis."
+            format_sentiment(avg_sentiment),
+            help="Average sentiment score as a deviation from neutral. Calculated using TextBlob polarity analysis."
         )
     with col3:
         st.metric(
-            "Company Mentions",
+            "Companies Mentioned",
             get_company_mention_count(data),
             help="Total number of company mentions extracted using named entity recognition (NER)"
         )
