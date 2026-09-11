@@ -53,7 +53,7 @@ python3 load.py --save-local
 Choose between JSON and CSV format:
 
 ```bash
-python3 load.py --format
+python3 load.py --save-local --format json
 ```
 
 ## Update ECR Image
