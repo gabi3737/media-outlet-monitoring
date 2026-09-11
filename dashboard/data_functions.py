@@ -1,7 +1,6 @@
 """
 Functions that manipulate the dataframe for the visualisations
 """
-import logging
 import pandas as pd
 
 
@@ -36,40 +35,46 @@ def get_clean_data(data: pd.DataFrame) -> pd.DataFrame:
 
 MISIDENTIFIED_COMPANIES = {
     'AI', 'AI Model', 'AI Language Model', 'API', 'App', 'GPU', 'RAM',
-    'Grok', 'Codex', 'Sentinel', 'Model', 'Recursive Intelligence', 'Block Safety', 'Reddit', 'VM', '3D', 'Spark'
+    'Grok', 'Codex', 'Sentinel', 'Model', 'Recursive Intelligence',
+    'Block Safety', 'Reddit', 'VM', '3D', 'Spark'
 }
 
 MISIDENTIFIED_INDIVIDUALS = {
     'Claude', 'Molly', 'Siri', 'Alexa', 'Muse', 'Kepler', 'Sundai',
-    'Kyler', 'Will', 'Molly Taft', 'Stretchay', 'Tom', 'Pichard',  'Leesha', 'Max', 'Romanenko', 'Kimi', 'K2',
+    'Kyler', 'Will', 'Molly Taft', 'Stretchay', 'Tom', 'Pichard',
+    'Leesha', 'Max', 'Romanenko', 'Kimi', 'K2',
     'Spencer', 'Kimball', 'Nicholas', 'Tristan', 'Buckmaster'
 }
 
 
-def filter_misidentified_entities(data: pd.DataFrame, exclude_misidentified: bool = True) -> pd.DataFrame:
+def filter_misidentified_entities(
+        data: pd.DataFrame,
+        exclude_misidentified: bool = True) -> pd.DataFrame:
     """Filter out commonly misidentified entities (AI assistants, voice assistants, etc.).
-    
+
     Args:
         data: Input DataFrame with 'companies' and 'individuals' columns
         exclude_misidentified: If True (default), removes misidentified entities.
                               If False, keeps all entities.
-    
+
     Returns:
         pd.DataFrame: DataFrame with filtered entities
     """
     if not exclude_misidentified or data.empty:
         return data
-    
+
     # Filter companies
     data['companies'] = data['companies'].apply(
-        lambda x: [c for c in x if c not in MISIDENTIFIED_COMPANIES] if isinstance(x, list) else x
+        lambda x: [c for c in x if c not in MISIDENTIFIED_COMPANIES] if isinstance(
+            x, list) else x
     )
-    
+
     # Filter individuals
     data['individuals'] = data['individuals'].apply(
-        lambda x: [i for i in x if i not in MISIDENTIFIED_INDIVIDUALS] if isinstance(x, list) else x
+        lambda x: [i for i in x if i not in MISIDENTIFIED_INDIVIDUALS] if isinstance(
+            x, list) else x
     )
-    
+
     return data
 
 
@@ -128,7 +133,11 @@ def get_company_mention_count(data: pd.DataFrame) -> int:
 
 def get_average_sentiment_by_company(data: pd.DataFrame) -> pd.DataFrame:
     """Returns the average sentiment grouped by company"""
-    return data.explode("companies").groupby("companies")["sentiment"].mean().round(2).reset_index().sort_values(by="sentiment", ascending=False)
+    return (
+        data.explode("companies").groupby("companies")["sentiment"]
+        .mean().round(2).reset_index()
+        .sort_values(by="sentiment", ascending=False)
+    )
 
 
 def get_average_sentiment_for_top_companies(data: pd.DataFrame) -> pd.DataFrame:
@@ -330,4 +339,7 @@ def get_trending_individuals(data: pd.DataFrame, days: int = 7) -> pd.DataFrame:
         .reset_index(name="count")
     )
 
-    return individual_counts[individual_counts['count'] > 1].sort_values(by="count", ascending=False)
+    return (
+        individual_counts[individual_counts['count'] > 1]
+        .sort_values(by="count", ascending=False)
+    )

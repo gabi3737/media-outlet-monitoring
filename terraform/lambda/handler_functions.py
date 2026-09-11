@@ -1,8 +1,8 @@
 """
 Functions that query the data and returns values for endpoints
 """
-import pandas as pd
 from datetime import date, timedelta
+import pandas as pd
 
 
 def get_clean_data(data: pd.DataFrame) -> pd.DataFrame:
