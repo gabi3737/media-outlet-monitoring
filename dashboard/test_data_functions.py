@@ -24,6 +24,19 @@ def sample_data():
     })
 
 
+@pytest.fixture
+def empty_dataset():
+    """Empty dataset"""
+    return pd.DataFrame({
+        'tags': [],
+        'author': [],
+        'individuals': [],
+        'companies': [],
+        'sentiment': [],
+        'published': []
+    })
+
+
 def test_get_clean_data_columns(sample_data):
     cleaned_data = get_clean_data(sample_data)
     expected_columns = ['published', 'companies',
@@ -53,6 +66,11 @@ def test_get_clean_data_correct_author(sample_data):
     cleaned_data = get_clean_data(sample_data)
     assert cleaned_data['author'].iloc[0] == ['Author1']
     assert cleaned_data['author'].iloc[1] == ['Author2']
+
+
+def test_get_clean_data_empty(empty_dataset):
+    clean_data = get_clean_data(empty_dataset)
+    pd.testing.assert_frame_equal(clean_data, empty_dataset)
 
 
 def test_get_average_sentiment(sample_data):
