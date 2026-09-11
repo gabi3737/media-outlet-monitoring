@@ -6,3 +6,4 @@ pylint
 altair
 boto3
 wordcloud
+plotly
